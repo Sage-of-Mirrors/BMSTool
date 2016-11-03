@@ -60,7 +60,7 @@ namespace BMSTool
 
         static void ReadBMS(EndianBinaryReader reader)
         {
-            while (reader.PeekReadByte() != 0xC1)
+            while (reader.PeekReadByte() == 0xC1)
             {
                 Track track = new Track(reader, FileTypes.BMS);
                 tracks.Add(track);

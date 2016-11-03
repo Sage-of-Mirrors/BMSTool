@@ -53,7 +53,9 @@
     <Compile Include="src\FileTypes.cs" />
     <Compile Include="src\NoteOff.cs" />
     <Compile Include="src\NoteOn.cs" />
+    <Compile Include="src\SetVolume.cs" />
     <Compile Include="src\Track.cs" />
+    <Compile Include="src\Wait.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
