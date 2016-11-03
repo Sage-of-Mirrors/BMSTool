@@ -28,13 +28,6 @@ namespace BMSTool.src
 
         private void ReadTrackBMS(EndianBinaryReader reader)
         {
-            reader.SkipByte(); // Skip open track opcode
-            TrackNumber = reader.PeekReadByte();
-
-            int trackOffset = reader.ReadInt32() & 0x00FFFFFF; // Get 24 bits that hold the offset
-            long nextOpcode = reader.BaseStream.Position; // Save position, since we're jumping to trackOffset
-            reader.BaseStream.Seek(trackOffset, System.IO.SeekOrigin.Begin); // Jump to beginning of track data
-
             byte opCode = reader.ReadByte();
             while (opCode != 0xFF)
             {
@@ -69,8 +62,11 @@ namespace BMSTool.src
                             break;
                         case 0x98:
                             byte secondOpcode98 = reader.ReadByte();
-                            if (secondOpcode98 == 0)
-                                reader.SkipByte();
+                            if (secondOpcode98 == 0) // Volume
+                            {
+                                SetVolume volume = new SetVolume(reader, FileTypes.BMS);
+                                Events.Add(volume);
+                            }   
                             else if (secondOpcode98 == 2)
                                 reader.SkipByte();
                             else if (secondOpcode98 == 4)
@@ -106,22 +102,44 @@ namespace BMSTool.src
                                 reader.SkipByte();
                             }
                             break;
+                        case 0xC8: // Jump. Used to loop. Unsupported right now
+                            reader.SkipByte();
+                            reader.SkipByte();
+                            reader.SkipInt16();
+                            break;
                         case 0xE6: // Vibrato
                             reader.SkipInt16();
                             break;
                         case 0xE7: // SynGPU
                             reader.SkipInt16();
                             break;
+                        case 0xF4: // Vib pitch
+                            reader.SkipByte();
+                            break;
+                        case 0xFD: // Tempo
+                            byte secondOpcodeFD = reader.ReadByte();
+                            if (secondOpcodeFD == 0)
+                            {
+                                SetTempo tempo = new SetTempo(reader, FileTypes.BMS);
+                                Events.Add(tempo);
+                            }
+                            break;
+                        case 0xFE: // Time base
+                            byte secondOpcodeFE = reader.ReadByte();
+                            if (secondOpcodeFE == 0)
+                            {
+                                SetTimeBase timeBase = new SetTimeBase(reader, FileTypes.BMS);
+                                Events.Add(timeBase);
+                            }
+                            break;
                         default:
-                            reader.SkipInt16();
+                            throw new FormatException("Unknown opcode " + opCode + "!");
                             break;
                     }
                 }
 
                 opCode = reader.ReadByte();
             }
-
-            reader.BaseStream.Position = nextOpcode; // Restore position to continue reading the file
         }
 
         private void ReadTrackMIDI(EndianBinaryReader reader)

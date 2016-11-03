@@ -53,6 +53,8 @@
     <Compile Include="src\FileTypes.cs" />
     <Compile Include="src\NoteOff.cs" />
     <Compile Include="src\NoteOn.cs" />
+    <Compile Include="src\SetTempo.cs" />
+    <Compile Include="src\SetTimeBase.cs" />
     <Compile Include="src\SetVolume.cs" />
     <Compile Include="src\Track.cs" />
     <Compile Include="src\Wait.cs" />

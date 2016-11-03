@@ -7,34 +7,32 @@ using GameFormatReader.Common;
 
 namespace BMSTool.src
 {
-    class SetVolume : Event
+    class SetTimeBase : Event
     {
-        byte Volume;
+        byte TimeBase;
 
-        public SetVolume(EndianBinaryReader reader, FileTypes type)
+        public SetTimeBase(EndianBinaryReader reader, FileTypes type)
         {
             if (type == FileTypes.BMS)
             {
-                Volume = reader.ReadByte();
+                TimeBase = reader.ReadByte();
             }
             else
             {
-                Volume = reader.ReadByte();
+                // ?
             }
         }
 
         public override void WriteBMS(EndianBinaryWriter writer)
         {
-            writer.Write((byte)0x98);
+            writer.Write((byte)0xFE);
             writer.Write((byte)0);
-            writer.Write(Volume);
+            writer.Write(TimeBase);
         }
 
         public override void WriteMIDI(EndianBinaryWriter writer)
         {
-            writer.Write((byte)0xB0);
-            writer.Write((byte)0x27);
-            writer.Write(Volume);
+            throw new NotImplementedException();
         }
     }
 }
