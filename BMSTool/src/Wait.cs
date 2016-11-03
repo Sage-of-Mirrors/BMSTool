@@ -75,7 +75,24 @@ namespace BMSTool.src
 
         public override void WriteMIDI(EndianBinaryWriter writer)
         {
-            throw new NotImplementedException();
+            long WaitCopy = WaitTime;
+            long buffer = WaitCopy & 0x7F;
+
+            while ((WaitCopy >>= 7) > 0)
+            {
+                buffer <<= 8;
+                buffer |= 0x80;
+                buffer += (WaitCopy & 0x7F);
+            }
+
+            while (true)
+            {
+                writer.Write((byte)(buffer & 0xFF));
+                if ((buffer & 0x80) == 0x80)
+                    buffer >>= 8;
+                else
+                    break;
+            }
         }
     }
 }

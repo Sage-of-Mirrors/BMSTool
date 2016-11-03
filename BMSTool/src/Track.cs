@@ -9,6 +9,8 @@ namespace BMSTool.src
 {
     public class Track
     {
+        static byte TrackNumberSource = 0;
+
         // MIDI needs to know the note number in order to turn off the note.
         // So, to ensure compatibility, we're going to store and remove notes as
         // they get turned on/off
@@ -19,6 +21,7 @@ namespace BMSTool.src
         public Track(EndianBinaryReader reader, FileTypes type)
         {
             Events = new List<Event>();
+            TrackNumber = TrackNumberSource++;
 
             if (type == FileTypes.BMS)
                 ReadTrackBMS(reader);
@@ -134,7 +137,6 @@ namespace BMSTool.src
                             break;
                         default:
                             throw new FormatException("Unknown opcode " + opCode + "!");
-                            break;
                     }
                 }
 
@@ -147,9 +149,64 @@ namespace BMSTool.src
 
         }
 
-        public void WriteTrack(EndianBinaryWriter writer)
+        public void WriteTrack(EndianBinaryWriter writer, FileTypes type)
+        {
+            if (type == FileTypes.BMS)
+                WriteTrackBMS(writer);
+            else
+                WriteTrackMIDI(writer);
+        }
+
+        private void WriteTrackBMS(EndianBinaryWriter writer)
         {
 
+        }
+
+        private void WriteTrackMIDI(EndianBinaryWriter writer)
+        {
+            writer.Write("MTrk".ToCharArray()); // Track header
+            writer.Write((int)0); // Track size placeholder
+
+            long trackStart = writer.BaseStream.Position; // We'll use this to calculate track size at the end
+
+            // Track heading, just Track<number>
+            string heading = string.Format("Track{0}", TrackNumber);
+            writer.Write((byte)0);
+            writer.Write((byte)0xFF);
+            writer.Write((byte)3);
+            writer.Write((byte)heading.Length);
+            writer.Write(heading.ToCharArray());
+
+            // Program change, sets instrument to 1, Bright Accoustic Piano
+            writer.Write((byte)0);
+            writer.Write((byte)0xC0);
+            writer.Write((byte)1);
+
+            // Set initial volume
+            writer.Write((byte)0);
+            writer.Write((byte)0xB0);
+            writer.Write((byte)7);
+            writer.Write((byte)0x7F);
+
+            // If there's no wait command to start off with, delta-time in the track has to be set to 0
+            if (Events[0].GetType() != typeof(Wait))
+                writer.Write((byte)0);
+
+            foreach (Event ev in Events)
+                ev.WriteMIDI(writer);
+
+            // End of track
+            writer.Write((byte)0);
+            writer.Write((byte)0xFF);
+            writer.Write((byte)0x2F);
+            writer.Write((byte)0);
+
+            int trackSize = (int)(writer.BaseStream.Position - trackStart);
+
+            // Go to track size, write it, then return to the end of the stream
+            writer.BaseStream.Position = trackStart - 4;
+            writer.Write(trackSize);
+            writer.BaseStream.Seek(0, System.IO.SeekOrigin.End);
         }
     }
 }

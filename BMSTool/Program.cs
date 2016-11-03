@@ -81,11 +81,33 @@ namespace BMSTool
 
             Track headerTrack = new Track(reader, FileTypes.BMS);
             tracks.Insert(0, headerTrack);
+
+            WriteMidi();
         }
 
         static void ReadMIDI(EndianBinaryReader reader)
         {
 
+        }
+
+        static void WriteMidi()
+        {
+            using (FileStream stream = new FileStream(@"D:\Student Data\Documents\test.mid", FileMode.Create, FileAccess.Write))
+            {
+                EndianBinaryWriter writer = new EndianBinaryWriter(stream, Endian.Big);
+                writer.Write("MThd".ToCharArray()); // Header magic
+                writer.Write((int)6); // Header size, always 6
+                writer.Write((short)1); // Format, this program outputs format 1
+                writer.Write((short)tracks.Count); // Number of tracks
+                writer.Write((short)0xF0); // This is for timing and divisions. May be analogous to BMS's time base, and may need to replace
+                                           // this default value.
+
+                // Write and remove the header track cause it's special
+                tracks.RemoveAt(0);
+
+                foreach (Track track in tracks)
+                    track.WriteTrack(writer, FileTypes.MIDI);
+            }
         }
     }
 }
