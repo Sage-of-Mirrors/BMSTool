@@ -17,6 +17,8 @@ namespace BMSTool
         static FileTypes InputType;
         static FileTypes OutputType;
 
+        static string FileName;
+
         static void Main(string[] args)
         {
             /*
@@ -28,7 +30,9 @@ namespace BMSTool
                 return;
             }*/
 
-            string inputPath = @"D:\Student Data\Downloads\Legend of Zelda, The - The Wind Waker (USA)\bms\tower.bms";
+            string inputPath = @"D:\Student Data\Downloads\Legend of Zelda, The - The Wind Waker (USA)\bms\i_taura.bms";
+
+            FileName = Path.GetFileNameWithoutExtension(inputPath);
 
             using (FileStream stream = new FileStream(inputPath, FileMode.Open, FileAccess.Read))
             {
@@ -50,8 +54,6 @@ namespace BMSTool
                 {
                     throw new FormatException("Filetype was unrecognized!");
                 }
-
-
 
                 if (InputType == FileTypes.BMS)
                     ReadBMS(reader);
@@ -94,55 +96,23 @@ namespace BMSTool
 
         static void WriteMidi()
         {
-            using (FileStream stream = new FileStream(@"D:\test.mid", FileMode.Create, FileAccess.Write))
+            using (FileStream stream = new FileStream(string.Format("D:\\{0}.mid", FileName), FileMode.Create, FileAccess.Write))
             {
                 EndianBinaryWriter writer = new EndianBinaryWriter(stream, Endian.Big);
                 writer.Write("MThd".ToCharArray()); // Header magic
                 writer.Write((int)6); // Header size, always 6
                 writer.Write((short)1); // Format, this program outputs format 1
                 writer.Write((short)tracks.Count); // Number of tracks
-                writer.Write((short)0xF0); // This is for timing and divisions. May be analogous to BMS's time base, and may need to replace
-                                           // this default value.
-
-                // Write and remove the header track cause it's special
-                //WriteFirstMIDITrack(writer);
-                //tracks.RemoveAt(0);
+                writer.Write((short)0xF0); // This is for timing and divisions. It's overwritten (hopefully) by the SetTimeBase event.
 
                 foreach (Track track in tracks)
                     track.WriteTrack(writer, FileTypes.MIDI);
             }
         }
 
-        static void WriteFirstMIDITrack(EndianBinaryWriter writer)
+        static void WriteBMS()
         {
-            writer.Write("MTrk".ToCharArray());
-            writer.Write((int)0);
 
-            long trackStart = writer.BaseStream.Position; // We'll use this to calculate track size at the end
-
-            // Track heading, just Track<number>
-            string heading = "Meta";
-            writer.Write((byte)0);
-            writer.Write((byte)0xFF);
-            writer.Write((byte)3);
-            writer.Write((byte)heading.Length);
-            writer.Write(heading.ToCharArray());
-
-            // End of track
-            // We check if the last event is Wait. If it isn't, we need to put in a delta-time value of 0
-            //if (tracks[0].Events.Last().GetType() != typeof(Wait))
-                //writer.Write((byte)0);
-
-            writer.Write((byte)0xFF);
-            writer.Write((byte)0x2F);
-            writer.Write((byte)0);
-
-            int trackSize = (int)(writer.BaseStream.Position - trackStart);
-
-            // Go to track size, write it, then return to the end of the stream
-            writer.BaseStream.Position = trackStart - 4;
-            writer.Write(trackSize);
-            writer.BaseStream.Seek(0, System.IO.SeekOrigin.End);
         }
     }
 }

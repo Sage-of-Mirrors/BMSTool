@@ -41,6 +41,7 @@ namespace BMSTool.src
                     NoteOn noteOn = new NoteOn(reader, FileTypes.BMS);
                     Events.Add(noteOn);
                     ChannelList[noteOn.Channel] = noteOn.Note; // Add the note to the note channel list
+                    noteOn.Channel = TrackNumber;
                 }
                 // This means note off
                 else if (opCode >= 0x81 && opCode <= 0x87)
@@ -52,6 +53,7 @@ namespace BMSTool.src
                     // Set the note being turned off and then remove it from the channel list
                     noteOff.Note = ChannelList[noteOff.Channel];
                     ChannelList[noteOff.Channel] = 255;
+                    noteOff.Channel = TrackNumber;
                 }
                 else
                 {
@@ -229,11 +231,15 @@ namespace BMSTool.src
         {
             // This will make sure that there is only 1 wait command between each event, like MIDI
 
+            if (TrackNumber == 12)
+            {
+
+            }
             for (int i = 0; i < Events.Count; i++)
             {
                 if (Events[i].GetType() == typeof(Wait))
                 {
-                    if ((i + 1) >= Events.Count)
+                    if ((i + 1) == Events.Count)
                         break;
 
                     else if (Events[i + 1].GetType() == typeof(Wait))
@@ -243,6 +249,8 @@ namespace BMSTool.src
                         wait.WaitTime += delete.WaitTime;
 
                         Events.RemoveAt(i + 1);
+
+                        i--;
                     }
                 }
             }
