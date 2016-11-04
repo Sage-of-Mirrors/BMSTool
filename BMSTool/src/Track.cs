@@ -105,6 +105,9 @@ namespace BMSTool.src
                                 reader.SkipByte();
                             }
                             break;
+                        case 0xC4:
+                            reader.SkipInt32();
+                            break;
                         case 0xC8: // Jump. Used to loop. Unsupported right now
                             reader.SkipByte();
                             reader.SkipByte();
@@ -142,6 +145,8 @@ namespace BMSTool.src
 
                 opCode = reader.ReadByte();
             }
+
+            CombineWaitCommands();
         }
 
         private void ReadTrackMIDI(EndianBinaryReader reader)
@@ -180,23 +185,34 @@ namespace BMSTool.src
             // Program change, sets instrument to 1, Bright Accoustic Piano
             writer.Write((byte)0);
             writer.Write((byte)0xC0);
-            writer.Write((byte)1);
+            writer.Write((byte)((TrackNumber * 3) + 1));
 
             // Set initial volume
             writer.Write((byte)0);
             writer.Write((byte)0xB0);
-            writer.Write((byte)7);
-            writer.Write((byte)0x7F);
+            writer.Write((byte)0x7B);
+            writer.Write((byte)0x00);
 
             // If there's no wait command to start off with, delta-time in the track has to be set to 0
             if (Events[0].GetType() != typeof(Wait))
                 writer.Write((byte)0);
 
-            foreach (Event ev in Events)
-                ev.WriteMIDI(writer);
+            for (int i = 0; i < Events.Count; i++)
+            {
+                Events[i].WriteMIDI(writer);
+
+                if ((Events[i].GetType() != typeof(Wait)) && (i < Events.Count - 1))
+                {
+                    if (Events[i + 1].GetType() != typeof(Wait))
+                        writer.Write((byte)0);
+                }
+            }
 
             // End of track
-            writer.Write((byte)0);
+            // We check if the last event is Wait. If it isn't, we need to put in a delta-time value of 0
+            if (Events.Last().GetType() != typeof(Wait))
+                writer.Write((byte)0);
+
             writer.Write((byte)0xFF);
             writer.Write((byte)0x2F);
             writer.Write((byte)0);
@@ -207,6 +223,29 @@ namespace BMSTool.src
             writer.BaseStream.Position = trackStart - 4;
             writer.Write(trackSize);
             writer.BaseStream.Seek(0, System.IO.SeekOrigin.End);
+        }
+
+        private void CombineWaitCommands()
+        {
+            // This will make sure that there is only 1 wait command between each event, like MIDI
+
+            for (int i = 0; i < Events.Count; i++)
+            {
+                if (Events[i].GetType() == typeof(Wait))
+                {
+                    if ((i + 1) >= Events.Count)
+                        break;
+
+                    else if (Events[i + 1].GetType() == typeof(Wait))
+                    {
+                        Wait wait = Events[i] as Wait;
+                        Wait delete = Events[i + 1] as Wait;
+                        wait.WaitTime += delete.WaitTime;
+
+                        Events.RemoveAt(i + 1);
+                    }
+                }
+            }
         }
     }
 }

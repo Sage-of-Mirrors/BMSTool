@@ -28,7 +28,7 @@ namespace BMSTool
                 return;
             }*/
 
-            string inputPath = @"D:\Dropbox\TWW Docs\bms\elf.bms";
+            string inputPath = @"D:\SZS Tools\bms\house.bms";
 
             using (FileStream stream = new FileStream(inputPath, FileMode.Open, FileAccess.Read))
             {
@@ -50,6 +50,8 @@ namespace BMSTool
                 {
                     throw new FormatException("Filetype was unrecognized!");
                 }
+
+
 
                 if (InputType == FileTypes.BMS)
                     ReadBMS(reader);
@@ -92,7 +94,7 @@ namespace BMSTool
 
         static void WriteMidi()
         {
-            using (FileStream stream = new FileStream(@"D:\Student Data\Documents\test.mid", FileMode.Create, FileAccess.Write))
+            using (FileStream stream = new FileStream(@"D:\SZS Tools\test.mid", FileMode.Create, FileAccess.Write))
             {
                 EndianBinaryWriter writer = new EndianBinaryWriter(stream, Endian.Big);
                 writer.Write("MThd".ToCharArray()); // Header magic

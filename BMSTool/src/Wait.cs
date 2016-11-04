@@ -9,7 +9,7 @@ namespace BMSTool.src
 {
     public class Wait : Event
     {
-        int WaitTime;
+        public int WaitTime;
 
         public Wait(EndianBinaryReader reader, FileTypes type)
         {
@@ -78,13 +78,41 @@ namespace BMSTool.src
             long WaitCopy = WaitTime;
             long buffer = WaitCopy & 0x7F;
 
-            while ((WaitCopy >>= 7) > 0)
+            int iterations;
+
+            // for variable length quantities, determine the length of the output.
+            // there can be a maximum of 4 bytes output.
+            if (WaitCopy < 0x80)
             {
-                buffer <<= 8;
-                buffer |= 0x80;
-                buffer += (WaitCopy & 0x7F);
+                iterations = 1;
+            }
+            else if (WaitCopy < 0x4000)
+            {
+                iterations = 2;
+            }
+            else if (WaitCopy < 0x200000)
+            {
+                iterations = 3;
+            }
+            else
+            {
+                iterations = 4;
             }
 
+            while ((WaitCopy >>= 7) != 0)
+            {
+                buffer <<= 8;
+                //buffer |= 0x80;
+                buffer |= ((WaitCopy & 0x7F) | 0x80);
+            }
+
+            for (int i = 0; i < iterations; i++)
+            {
+                writer.Write((byte)(buffer & 0xFF));
+                buffer = buffer >> 8;
+            }
+
+            /*
             while (true)
             {
                 writer.Write((byte)(buffer & 0xFF));
@@ -92,7 +120,7 @@ namespace BMSTool.src
                     buffer >>= 8;
                 else
                     break;
-            }
+            }*/
         }
     }
 }
