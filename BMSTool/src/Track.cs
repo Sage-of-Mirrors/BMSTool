@@ -314,7 +314,7 @@ namespace BMSTool.src
                 }
                 Events[i].WriteMIDI(writer);
 
-                if ((Events[i].GetType() != typeof(Wait)) && (i < Events.Count - 1))
+                if ((Events[i].GetType() != typeof(Wait)) && ((Events[i].GetType() != typeof(SetTimeBase)) && (i < Events.Count - 1)))
                 {
                     if (Events[i + 1].GetType() != typeof(Wait))
                         writer.Write((byte)0);

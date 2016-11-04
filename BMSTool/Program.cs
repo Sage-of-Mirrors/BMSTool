@@ -30,7 +30,7 @@ namespace BMSTool
                 return;
             }*/
 
-            string inputPath = @"D:\SZS Tools\bms\tetra_meet_b.bms";
+            string inputPath = @"D:\Student Data\Downloads\Super Mario Sunshine (USA)\unknown.bms";
 
             FileName = Path.GetFileNameWithoutExtension(inputPath);
 
