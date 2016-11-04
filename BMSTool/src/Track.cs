@@ -122,20 +122,20 @@ namespace BMSTool.src
                         case 0xF4: // Vib pitch
                             reader.SkipByte();
                             break;
-                        case 0xFD: // Tempo
-                            byte secondOpcodeFD = reader.ReadByte();
-                            if (secondOpcodeFD == 0)
-                            {
-                                SetTempo tempo = new SetTempo(reader, FileTypes.BMS);
-                                Events.Add(tempo);
-                            }
-                            break;
-                        case 0xFE: // Time base
+                        case 0xFD: // Time base
                             byte secondOpcodeFE = reader.ReadByte();
                             if (secondOpcodeFE == 0)
                             {
                                 SetTimeBase timeBase = new SetTimeBase(reader, FileTypes.BMS);
                                 Events.Add(timeBase);
+                            }
+                            break;
+                        case 0xFE: // Tempo
+                            byte secondOpcodeFD = reader.ReadByte();
+                            if (secondOpcodeFD == 0)
+                            {
+                                SetTempo tempo = new SetTempo(reader, FileTypes.BMS);
+                                Events.Add(tempo);
                             }
                             break;
                         default:

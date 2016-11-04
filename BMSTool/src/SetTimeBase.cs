@@ -32,7 +32,10 @@ namespace BMSTool.src
 
         public override void WriteMIDI(EndianBinaryWriter writer)
         {
-            throw new NotImplementedException();
+            long curPos = writer.BaseStream.Position;
+            writer.BaseStream.Seek(0xC, System.IO.SeekOrigin.Begin);
+            writer.Write((short)TimeBase);
+            writer.BaseStream.Seek(curPos, System.IO.SeekOrigin.Begin);
         }
     }
 }

@@ -28,7 +28,7 @@ namespace BMSTool
                 return;
             }*/
 
-            string inputPath = @"D:\SZS Tools\bms\house.bms";
+            string inputPath = @"D:\Student Data\Downloads\Legend of Zelda, The - The Wind Waker (USA)\bms\tower.bms";
 
             using (FileStream stream = new FileStream(inputPath, FileMode.Open, FileAccess.Read))
             {
@@ -94,7 +94,7 @@ namespace BMSTool
 
         static void WriteMidi()
         {
-            using (FileStream stream = new FileStream(@"D:\SZS Tools\test.mid", FileMode.Create, FileAccess.Write))
+            using (FileStream stream = new FileStream(@"D:\test.mid", FileMode.Create, FileAccess.Write))
             {
                 EndianBinaryWriter writer = new EndianBinaryWriter(stream, Endian.Big);
                 writer.Write("MThd".ToCharArray()); // Header magic
@@ -105,11 +105,44 @@ namespace BMSTool
                                            // this default value.
 
                 // Write and remove the header track cause it's special
-                tracks.RemoveAt(0);
+                //WriteFirstMIDITrack(writer);
+                //tracks.RemoveAt(0);
 
                 foreach (Track track in tracks)
                     track.WriteTrack(writer, FileTypes.MIDI);
             }
+        }
+
+        static void WriteFirstMIDITrack(EndianBinaryWriter writer)
+        {
+            writer.Write("MTrk".ToCharArray());
+            writer.Write((int)0);
+
+            long trackStart = writer.BaseStream.Position; // We'll use this to calculate track size at the end
+
+            // Track heading, just Track<number>
+            string heading = "Meta";
+            writer.Write((byte)0);
+            writer.Write((byte)0xFF);
+            writer.Write((byte)3);
+            writer.Write((byte)heading.Length);
+            writer.Write(heading.ToCharArray());
+
+            // End of track
+            // We check if the last event is Wait. If it isn't, we need to put in a delta-time value of 0
+            //if (tracks[0].Events.Last().GetType() != typeof(Wait))
+                //writer.Write((byte)0);
+
+            writer.Write((byte)0xFF);
+            writer.Write((byte)0x2F);
+            writer.Write((byte)0);
+
+            int trackSize = (int)(writer.BaseStream.Position - trackStart);
+
+            // Go to track size, write it, then return to the end of the stream
+            writer.BaseStream.Position = trackStart - 4;
+            writer.Write(trackSize);
+            writer.BaseStream.Seek(0, System.IO.SeekOrigin.End);
         }
     }
 }
