@@ -9,7 +9,7 @@ namespace BMSTool.src
 {
     public class Wait : Event
     {
-        public int WaitTime;
+        public uint WaitTime;
 
         public Wait(EndianBinaryReader reader, FileTypes type)
         {
@@ -19,10 +19,10 @@ namespace BMSTool.src
 
                 // This one uses a byte to store time to wait
                 if (opCode == 0x80)
-                    WaitTime = (int)reader.ReadByte();
+                    WaitTime = (uint)reader.ReadByte();
                 // This one uses a short to store time to wait
                 else if (opCode == 0x88)
-                    WaitTime = (int)reader.ReadInt16();
+                    WaitTime = (uint)reader.ReadUInt16();
             }
             else
             {
@@ -52,7 +52,7 @@ namespace BMSTool.src
                 for (int i = 0; i < inputIndex; i++)
                 {
                     WaitTime = WaitTime << 7;
-                    WaitTime |= inputArray[i] & 0x7F;
+                    WaitTime |= (uint)(inputArray[i] & 0x7F);
                 }
             }
         }

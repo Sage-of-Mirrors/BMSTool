@@ -31,6 +31,10 @@ namespace BMSTool.src
 
         private void ReadTrackBMS(EndianBinaryReader reader)
         {
+            if (reader.BaseStream.Position == 0x63)
+            {
+
+            }
             byte opCode = reader.ReadByte();
             while (opCode != 0xFF)
             {
@@ -71,23 +75,38 @@ namespace BMSTool.src
                             {
                                 SetVolume volume = new SetVolume(reader, FileTypes.BMS);
                                 Events.Add(volume);
-                            }   
+                            }
                             else if (secondOpcode98 == 2)
                                 reader.SkipByte();
                             else if (secondOpcode98 == 4)
+                                reader.SkipByte();
+                            else
                                 reader.SkipByte();
                             break;
                         case 0x9A: // Panning
                             byte secondOpcode9a = reader.ReadByte();
                             if (secondOpcode9a == 3)
                                 reader.SkipInt16();
+                            else
+                                reader.SkipInt16();
                             break;
                         case 0x9C:
                             byte secondOpcode9c = reader.ReadByte();
                             if (secondOpcode9c == 0)
                                 reader.SkipInt16();
-                            if (secondOpcode9c == 1)
+                            else if (secondOpcode9c == 1)
                                 reader.SkipInt16();
+                            else
+                                reader.SkipInt16();
+                            break;
+                        case 0x9E:
+                            reader.SkipInt32();
+                            break;
+                        case 0xA0:
+                            reader.SkipInt16();
+                            break;
+                        case 0xA1:
+                            reader.SkipInt16();
                             break;
                         case 0xA4: // Meaning depends on secondOpcode
                             byte secondOpcodea4 = reader.ReadByte();
@@ -106,8 +125,47 @@ namespace BMSTool.src
                             {
                                 reader.SkipByte();
                             }
+                            else if (secondOpcodea4 == 1)
+                                reader.SkipByte();
+                            else
+                                reader.SkipByte();
+                            break;
+                        case 0xA5:
+                            reader.SkipInt16();
+                            break;
+                        case 0xA6:
+                            reader.SkipInt16();
+                            break;
+                        case 0xA7:
+                            reader.SkipInt16();
+                            break;
+                        case 0xA9:
+                            reader.SkipInt32();
+                            break;
+                        case 0xAA:
+                            reader.SkipInt32();
+                            break;
+                        case 0xAC:
+                            reader.SkipByte();
+                            reader.SkipInt16();
+                            break;
+                        case 0xAD:
+                            reader.SkipByte();
+                            reader.SkipInt16();
+                            break;
+                        case 0xAF:
+
+                            break;
+                        case 0xC0:
+                            reader.SkipInt32();
+                            break;
+                        case 0xC1:
+                            reader.SkipInt32();
                             break;
                         case 0xC4:
+                            reader.SkipInt32();
+                            break;
+                        case 0xC7:
                             reader.SkipInt32();
                             break;
                         case 0xC8: // Jump. Used to loop. Unsupported right now
@@ -115,21 +173,66 @@ namespace BMSTool.src
                             reader.SkipByte();
                             reader.SkipInt16();
                             break;
+                        case 0xCB:
+                            reader.SkipInt16();
+                            break;
+                        case 0xCC:
+                            reader.SkipInt16();
+                            break;
+                        case 0xD2:
+                            reader.SkipInt16();
+                            break;
+                        case 0xD8:
+                            reader.Skip(3);
+                            break;
+                        case 0xDA:
+                            reader.SkipByte();
+                            break;
+                        case 0xDB:
+                            reader.SkipByte();
+                            break;
+                        case 0xDD:
+                            reader.Skip(3);
+                            break;
+                        case 0xDF:
+                            reader.SkipInt32();
+                            break;
+                        case 0xE0:
+                            reader.SkipInt16();
+                            break;
+                        case 0xE2:
+                            reader.SkipByte();
+                            break;
+                        case 0xE3:
+                            reader.SkipByte();
+                            break;
                         case 0xE6: // Vibrato
                             reader.SkipInt16();
                             break;
                         case 0xE7: // SynGPU
                             reader.SkipInt16();
                             break;
+                        case 0xEF:
+                            reader.Skip(3);
+                            break;
+                        case 0xF0:
+                            reader.SkipInt16();
+                            break;
+                        case 0xF1: // ?
+                            reader.SkipByte();
+                            break;
                         case 0xF4: // Vib pitch
                             reader.SkipByte();
+                            break;
+                        case 0xF9:
+                            reader.SkipInt16();
                             break;
                         case 0xFD: // Time base
                             byte secondOpcodeFE = reader.ReadByte();
                             if (secondOpcodeFE == 0)
                             {
                                 SetTimeBase timeBase = new SetTimeBase(reader, FileTypes.BMS);
-                                Events.Add(timeBase);
+                                Events.Insert(0, timeBase);
                             }
                             break;
                         case 0xFE: // Tempo
@@ -171,6 +274,10 @@ namespace BMSTool.src
 
         private void WriteTrackMIDI(EndianBinaryWriter writer)
         {
+            if (TrackNumber == 8)
+            {
+
+            }
             writer.Write("MTrk".ToCharArray()); // Track header
             writer.Write((int)0); // Track size placeholder
 
@@ -201,6 +308,10 @@ namespace BMSTool.src
 
             for (int i = 0; i < Events.Count; i++)
             {
+                if (i == 4)
+                {
+
+                }
                 Events[i].WriteMIDI(writer);
 
                 if ((Events[i].GetType() != typeof(Wait)) && (i < Events.Count - 1))
@@ -231,10 +342,6 @@ namespace BMSTool.src
         {
             // This will make sure that there is only 1 wait command between each event, like MIDI
 
-            if (TrackNumber == 12)
-            {
-
-            }
             for (int i = 0; i < Events.Count; i++)
             {
                 if (Events[i].GetType() == typeof(Wait))

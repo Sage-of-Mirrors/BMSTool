@@ -30,7 +30,7 @@ namespace BMSTool
                 return;
             }*/
 
-            string inputPath = @"D:\Student Data\Downloads\Legend of Zelda, The - The Wind Waker (USA)\bms\i_taura.bms";
+            string inputPath = @"D:\SZS Tools\bms\tetra_meet_b.bms";
 
             FileName = Path.GetFileNameWithoutExtension(inputPath);
 
