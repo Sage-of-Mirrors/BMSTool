@@ -30,7 +30,7 @@ namespace BMSTool
                 return;
             }*/
 
-            string inputPath = @"D:\Student Data\Downloads\Super Mario Sunshine (USA)\unknown.bms";
+            string inputPath = @"D:\SZS Tools\FDS_BIOS_-_Startup.mid";
 
             FileName = Path.GetFileNameWithoutExtension(inputPath);
 
@@ -91,7 +91,44 @@ namespace BMSTool
 
         static void ReadMIDI(EndianBinaryReader reader)
         {
+            reader.SkipInt64(); // Skips "MThd" magic and size, which is always 6
 
+            // There's type 0, type 1, and type 2
+            // Type 1 is the easiest to turn into BMS.
+            // Type 0 puts individual notes into the different channels. Slightly harder but still possible.
+            // Type 2 is meant for tracks that are to be played invidivdually. Not supported for BMS output.
+            short midiType = reader.ReadInt16();
+
+            if (midiType == 0)
+            {
+                //ReadType0Midi(reader);
+            }
+            else if (midiType == 1)
+            {
+                ReadType1Midi(reader);
+            }
+            else if (midiType == 2)
+            {
+                throw new FormatException("MIDI type 2 is unsupported!");
+            }
+            else
+            {
+                throw new FormatException("MIDI type unrecognized!");
+            }
+        }
+
+        static void ReadType1Midi(EndianBinaryReader reader)
+        {
+            short numTracks = reader.ReadInt16();
+            short timeBase = reader.ReadInt16();
+
+            for (int i = 0; i < numTracks; i++)
+            {
+                Track track = new Track(reader, FileTypes.MIDI);
+                tracks.Add(track);
+            }
+
+            WriteBMSType1();
         }
 
         static void WriteMidi()
@@ -110,9 +147,27 @@ namespace BMSTool
             }
         }
 
-        static void WriteBMS()
+        static void WriteBMSType1()
         {
+            using (FileStream stream = new FileStream(string.Format("D:\\{0}.bms", FileName), FileMode.Create, FileAccess.Write))
+            {
+                EndianBinaryWriter writer = new EndianBinaryWriter(stream, Endian.Big);
 
+                // - 1 because MIDI type 1's first track is global info like tempo
+                for (int i = 0; i < tracks.Count - 1; i++)
+                {
+                    writer.Write((byte)0xC1); // Open track command
+                    writer.Write((byte)i); // Track number
+                    writer.Write((byte)0);
+                    writer.Write((byte)0); // Placeholder for track offset. It's only 24 bits, hence the 3 bytes
+                    writer.Write((byte)0);
+                }
+
+                tracks.RemoveAt(0);
+
+                foreach (Track track in tracks)
+                    track.WriteTrack(writer, FileTypes.BMS);
+            }
         }
     }
 }

@@ -9,25 +9,24 @@ namespace BMSTool.src
 {
     class SetTempo : Event
     {
-        byte Tempo;
+        ushort Tempo;
 
         public SetTempo(EndianBinaryReader reader, FileTypes type)
         {
             if (type == FileTypes.BMS)
             {
-                Tempo = reader.ReadByte();
+                Tempo = reader.ReadUInt16();
             }
             else
             {
-                Tempo = (byte)(60000000 / reader.ReadBits(24)); // Tempo is stored in microseconds, so we have to convert that
-                                                                // to Beats per Minute
+                uint test = reader.ReadBits(24);
+                Tempo = (ushort)(60000000 / test); // Tempo is stored in microseconds, so we have to convert that to Beats per Minute
             }
         }
 
         public override void WriteBMS(EndianBinaryWriter writer)
         {
-            writer.Write((byte)0xFD);
-            writer.Write((byte)0);
+            writer.Write((byte)0xFE);
             writer.Write(Tempo);
         }
 

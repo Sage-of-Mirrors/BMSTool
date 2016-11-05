@@ -31,10 +31,6 @@ namespace BMSTool.src
 
         private void ReadTrackBMS(EndianBinaryReader reader)
         {
-            if (reader.BaseStream.Position == 0x63)
-            {
-
-            }
             byte opCode = reader.ReadByte();
             while (opCode != 0xFF)
             {
@@ -182,6 +178,9 @@ namespace BMSTool.src
                         case 0xD2:
                             reader.SkipInt16();
                             break;
+                        case 0xD6:
+                            reader.SkipByte();
+                            break;
                         case 0xD8:
                             reader.Skip(3);
                             break;
@@ -216,7 +215,10 @@ namespace BMSTool.src
                             reader.Skip(3);
                             break;
                         case 0xF0:
-                            reader.SkipInt16();
+                            while ((reader.ReadByte() & 0x80) == 0x80)
+                            {
+                                // what
+                            }
                             break;
                         case 0xF1: // ?
                             reader.SkipByte();
@@ -228,20 +230,12 @@ namespace BMSTool.src
                             reader.SkipInt16();
                             break;
                         case 0xFD: // Time base
-                            byte secondOpcodeFE = reader.ReadByte();
-                            if (secondOpcodeFE == 0)
-                            {
-                                SetTimeBase timeBase = new SetTimeBase(reader, FileTypes.BMS);
-                                Events.Insert(0, timeBase);
-                            }
+                            SetTimeBase timeBase = new SetTimeBase(reader, FileTypes.BMS);
+                            Events.Insert(0, timeBase);
                             break;
                         case 0xFE: // Tempo
-                            byte secondOpcodeFD = reader.ReadByte();
-                            if (secondOpcodeFD == 0)
-                            {
-                                SetTempo tempo = new SetTempo(reader, FileTypes.BMS);
-                                Events.Add(tempo);
-                            }
+                            SetTempo tempo = new SetTempo(reader, FileTypes.BMS);
+                            Events.Add(tempo);
                             break;
                         default:
                             throw new FormatException("Unknown opcode " + opCode + "!");
@@ -256,7 +250,107 @@ namespace BMSTool.src
 
         private void ReadTrackMIDI(EndianBinaryReader reader)
         {
+            if (reader.ReadStringUntil('\0') != "MTrk")
+                throw new FormatException(string.Format("Invalid track at offset 0x{0:X8}!", reader.BaseStream.Position));
 
+            reader.BaseStream.Position--;
+            int trackSize = reader.ReadInt32();
+
+            // We need to see if this track starts out with a delta-time command, which is anything other than 0
+            if (reader.PeekReadByte() != 0)
+            {
+                Wait initialWait = new Wait(reader, FileTypes.MIDI);
+                Events.Add(initialWait);
+            }
+            // Skip to first command byte
+            else
+            {
+                reader.SkipByte();
+            }
+
+            byte primaryCommand = 0;
+            byte secondaryCommand = 0;
+
+            // 0xFF 2F 00 is the command for end of track, so we'll keep reading until we hit it
+            while (secondaryCommand != 0x2F)
+            {
+                primaryCommand = reader.ReadByte();
+
+                // Note on
+                if ((primaryCommand & 0x90) == 0x90 && primaryCommand < 0x9F)
+                {
+                    reader.BaseStream.Position--;
+                    NoteOn noteOn = new NoteOn(reader, FileTypes.MIDI);
+                    Events.Add(noteOn);
+                }
+                // Note off
+                else if ((primaryCommand & 0x80) == 0x80 && primaryCommand < 0x9F)
+                {
+                    reader.BaseStream.Position--;
+                    NoteOff noteOff = new NoteOff(reader, FileTypes.MIDI);
+                    Events.Add(noteOff);
+                }
+
+                switch (primaryCommand)
+                {
+                    // For most of these, we just read the length byte and skip it
+                    case 0x0B:
+                    case 0x7B:
+                    case 0x7E:
+                        reader.SkipByte();
+                        break;
+                    case 0xC0: // Set program/instrument
+                        reader.SkipByte();
+                        break;
+                    case 0xB0:
+                        reader.SkipInt16();
+                        break;
+                    case 0xB2:
+                        reader.SkipInt16();
+                        break;
+                    case 0xFF:
+                        secondaryCommand = reader.ReadByte();
+                        switch(secondaryCommand)
+                        {
+                            case 0x01:
+                            case 0x02:
+                            case 0x03:
+                            case 0x04:
+                            case 0x58: // This sets time signature. We'll skip it for now unless it's needed later
+                            case 0x7F:
+                                byte length = reader.ReadByte();
+                                reader.Skip(length);
+                                break;
+                            case 0x2F: // End the loop
+                                if (reader.BaseStream.Position + 1 < reader.BaseStream.Length)
+                                    reader.SkipByte();
+                                continue;
+                            case 0x51:
+                                reader.SkipByte();
+                                SetTempo tempo = new SetTempo(reader, FileTypes.MIDI);
+                                Events.Add(tempo);
+                                break;
+
+                        }
+                        break;
+                }
+
+                // Now that we've gotten the event data for this pass, we read in the delta-time for the next event
+                if (reader.PeekReadByte() != 0)
+                {
+                    Wait wait = new Wait(reader, FileTypes.MIDI);
+                    if (wait.WaitTime == 0x3C)
+                    {
+
+                    }
+                    Events.Add(wait);
+                }
+                // Skip to the command byte, there's no delta-time
+                else
+                {
+                    reader.SkipByte();
+                }
+            }
         }
 
         public void WriteTrack(EndianBinaryWriter writer, FileTypes type)
@@ -269,7 +363,34 @@ namespace BMSTool.src
 
         private void WriteTrackBMS(EndianBinaryWriter writer)
         {
+            long curPos = writer.BaseStream.Position;
+            writer.BaseStream.Seek(((TrackNumber - 1) * 5) + 2, System.IO.SeekOrigin.Begin);
 
+            // Offset is stored as 24 bit value, so we'll write it out like one
+            writer.Write((byte)((curPos & 0xFF0000) >> 16));
+            writer.Write((byte)((curPos & 0x00FF00) >> 8));
+            writer.Write((byte)(curPos & 0x0000FF));
+
+            writer.BaseStream.Seek(curPos, System.IO.SeekOrigin.Begin);
+
+            // SyncGPU, a given at the start of every track
+            writer.Write((byte)0xE7);
+            writer.Write((short)0);
+
+            // Set instrument bank
+            writer.Write((byte)0xA4);
+            writer.Write((byte)0x20);
+            writer.Write((byte)0);
+
+            // Set program/instrument
+            writer.Write((byte)0xA4);
+            writer.Write((byte)0x21);
+            writer.Write((byte)0);
+
+            foreach (Event ev in Events)
+                ev.WriteBMS(writer);
+
+            writer.Write((byte)0xFF);
         }
 
         private void WriteTrackMIDI(EndianBinaryWriter writer)

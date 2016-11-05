@@ -9,13 +9,13 @@ namespace BMSTool.src
 {
     class SetTimeBase : Event
     {
-        byte TimeBase;
+        short TimeBase;
 
         public SetTimeBase(EndianBinaryReader reader, FileTypes type)
         {
             if (type == FileTypes.BMS)
             {
-                TimeBase = reader.ReadByte();
+                TimeBase = reader.ReadInt16();
             }
             else
             {
@@ -25,8 +25,7 @@ namespace BMSTool.src
 
         public override void WriteBMS(EndianBinaryWriter writer)
         {
-            writer.Write((byte)0xFE);
-            writer.Write((byte)0);
+            writer.Write((byte)0xFD);
             writer.Write(TimeBase);
         }
 
