@@ -30,7 +30,7 @@ namespace BMSTool
                 return;
             }*/
 
-            string inputPath = @"D:\SZS Tools\FDS_BIOS_-_Startup.mid";
+            string inputPath = @"C:\Users\Dylan\Downloads\time_bgm.mid";
 
             FileName = Path.GetFileNameWithoutExtension(inputPath);
 
@@ -128,7 +128,7 @@ namespace BMSTool
                 tracks.Add(track);
             }
 
-            WriteBMSType1();
+            WriteBMSType1(timeBase);
         }
 
         static void WriteMidi()
@@ -147,7 +147,7 @@ namespace BMSTool
             }
         }
 
-        static void WriteBMSType1()
+        static void WriteBMSType1(short timeBase)
         {
             using (FileStream stream = new FileStream(string.Format("D:\\{0}.bms", FileName), FileMode.Create, FileAccess.Write))
             {
@@ -163,11 +163,42 @@ namespace BMSTool
                     writer.Write((byte)0);
                 }
 
+                foreach (Event ev in tracks[0].Events)
+                    ev.WriteBMS(writer);
+                writer.Write((byte)0xFD);
+                writer.Write(timeBase);
+                Wait highestWait = new Wait(CalcHighestWait());
+                highestWait.WriteBMS(writer);
+                writer.Write((byte)0xFF);
                 tracks.RemoveAt(0);
 
                 foreach (Track track in tracks)
                     track.WriteTrack(writer, FileTypes.BMS);
             }
+        }
+
+        static uint CalcHighestWait()
+        {
+            uint highestTime = uint.MinValue;
+
+            foreach (Track track in tracks)
+            {
+                uint localHigh = 0;
+
+                foreach (Event ev in track.Events)
+                {
+                    if (ev.GetType() == typeof(Wait))
+                    {
+                        Wait wait = ev as Wait;
+                        localHigh += wait.WaitTime;
+                    }
+                }
+
+                if (localHigh > highestTime)
+                    highestTime = localHigh;
+            }
+
+            return highestTime;
         }
     }
 }

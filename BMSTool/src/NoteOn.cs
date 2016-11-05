@@ -31,6 +31,13 @@ namespace BMSTool.src
             }
         }
 
+        public NoteOn(byte note, byte channel, byte velocity)
+        {
+            Note = note;
+            Channel = channel;
+            Velocity = velocity;
+        }
+
         public override void WriteBMS(EndianBinaryWriter writer)
         {
             // BMS stores NoteOn as <Note Number><Channel ID + 1><Velocity>

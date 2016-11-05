@@ -57,6 +57,11 @@ namespace BMSTool.src
             }
         }
 
+        public Wait(uint time)
+        {
+            WaitTime = time;
+        }
+
         public override void WriteBMS(EndianBinaryWriter writer)
         {
             // Basically, if it's above what a byte can store, we'll use 0x88

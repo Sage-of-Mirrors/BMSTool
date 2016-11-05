@@ -16,7 +16,7 @@ namespace BMSTool.src
         // they get turned on/off
         byte[] ChannelList = Enumerable.Repeat<byte>(0xFF, 16).ToArray();
         byte TrackNumber;
-        List<Event> Events;
+        public List<Event> Events;
 
         public Track(EndianBinaryReader reader, FileTypes type)
         {
@@ -270,6 +270,7 @@ namespace BMSTool.src
 
             byte primaryCommand = 0;
             byte secondaryCommand = 0;
+            byte lastCommand = 0;
 
             // 0xFF 2F 00 is the command for end of track, so we'll keep reading until we hit it
             while (secondaryCommand != 0x2F)
@@ -294,18 +295,25 @@ namespace BMSTool.src
                 switch (primaryCommand)
                 {
                     // For most of these, we just read the length byte and skip it
-                    case 0x0B:
-                    case 0x7B:
-                    case 0x7E:
+                    case 0xC0: // Set program/instrument
                         reader.SkipByte();
                         break;
-                    case 0xC0: // Set program/instrument
+                    case 0xC1:
+                        reader.SkipByte();
+                        break;
+                    case 0xC9:
                         reader.SkipByte();
                         break;
                     case 0xB0:
                         reader.SkipInt16();
                         break;
+                    case 0xB1:
+                        reader.SkipInt16();
+                        break;
                     case 0xB2:
+                        reader.SkipInt16();
+                        break;
+                    case 0xB9:
                         reader.SkipInt16();
                         break;
                     case 0xFF:
@@ -350,6 +358,8 @@ namespace BMSTool.src
                 {
                     reader.SkipByte();
                 }
+
+                lastCommand = primaryCommand;
             }
         }
 
@@ -385,6 +395,23 @@ namespace BMSTool.src
             // Set program/instrument
             writer.Write((byte)0xA4);
             writer.Write((byte)0x21);
+            writer.Write((byte)0);
+
+            // Vib depth MIDI
+            writer.Write((byte)0xE6);
+            writer.Write((short)0);
+
+            // I don't know what the next 3 do, but they're in most tracks, so I'll keep them for now
+            writer.Write((byte)0x98);
+            writer.Write((byte)2);
+            writer.Write((byte)0);
+
+            writer.Write((byte)0x98);
+            writer.Write((byte)4);
+            writer.Write((byte)0);
+
+            writer.Write((byte)0x98);
+            writer.Write((byte)2);
             writer.Write((byte)0);
 
             foreach (Event ev in Events)
