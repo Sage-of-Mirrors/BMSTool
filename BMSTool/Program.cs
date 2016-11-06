@@ -30,7 +30,7 @@ namespace BMSTool
                 return;
             }*/
 
-            inputPath = @"D:\SZS Tools\bms\kaminoto.bms";
+            inputPath = @"D:\SZS Tools\bms\kugutu2.bms";
             outputPath = string.Format("D:\\{0}", Path.GetFileNameWithoutExtension(inputPath));
 
             if (outputPath == "")

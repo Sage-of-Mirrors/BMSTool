@@ -32,6 +32,8 @@ namespace BMSTool.src
         private void ReadTrackBMS(EndianBinaryReader reader)
         {
             byte opCode = reader.ReadByte();
+            long curPos = 0; // This will be used for 0xC4 and 0xC6 commands to run sub-functions
+
             while (opCode != 0xFF)
             {
                 // It's a note, notes are opcodes <= 0x7F
@@ -101,9 +103,9 @@ namespace BMSTool.src
                         case 0xA0:
                             reader.SkipInt16();
                             break;
-                        case 0xA1:
-                            reader.SkipInt16();
-                            break;
+                        //case 0xA1:
+                            //reader.SkipInt16();
+                            //break;
                         case 0xA4: // Meaning depends on secondOpcode
                             byte secondOpcodea4 = reader.ReadByte();
                             // Set instrument source bank
@@ -142,32 +144,53 @@ namespace BMSTool.src
                             reader.SkipInt32();
                             break;
                         case 0xAC:
-                            reader.SkipByte();
-                            reader.SkipInt16();
+                            reader.Skip(3);
                             break;
                         case 0xAD:
-                            reader.SkipByte();
+                            reader.Skip(3);
+                            break;
+                        //case 0xAF:
+                        //
+                        //break;
+                        case 0xB1:
+                            byte secondOpcodeB1 = reader.ReadByte();
+                            if (secondOpcodeB1 == 0x40)
+                                reader.SkipInt16();
+                            else
+                                reader.SkipInt32();
+                            break;
+                        case 0xB8:
                             reader.SkipInt16();
                             break;
-                        case 0xAF:
-
-                            break;
-                        case 0xC0:
-                            reader.SkipInt32();
-                            break;
+                        //case 0xC0:
+                            //reader.SkipInt32();
+                            //break;
                         case 0xC1:
                             reader.SkipInt32();
                             break;
-                        case 0xC4:
+                        case 0xC2:
+                            reader.SkipByte();
+                            break;
+                        case 0xC4: // Subroutine time!
+                            byte secondOpcodeC4 = reader.ReadByte();
+                            if (secondOpcodeC4 == 0)
+                            {
+                                int offset = (int)reader.ReadBits(24);
+                                curPos = reader.BaseStream.Position;
+                                reader.BaseStream.Seek(offset, System.IO.SeekOrigin.Begin);
+                            }
+                            break;
+                        case 0xC5:
                             reader.SkipInt32();
+                            break;
+                        case 0xC6: // Return from subroutine
+                            reader.BaseStream.Seek(curPos, System.IO.SeekOrigin.Begin);
                             break;
                         case 0xC7:
                             reader.SkipInt32();
                             break;
                         case 0xC8: // Jump. Used to loop. Unsupported right now
-                            reader.SkipByte();
-                            reader.SkipByte();
-                            reader.SkipInt16();
+                            reader.SkipInt32();
                             break;
                         case 0xCB:
                             reader.SkipInt16();
@@ -175,7 +198,19 @@ namespace BMSTool.src
                         case 0xCC:
                             reader.SkipInt16();
                             break;
+                        case 0xCF:
+                            reader.SkipByte();
+                            break;
+                        case 0xD0:
+                            reader.SkipInt16();
+                            break;
+                        case 0xD1:
+                            reader.SkipInt16();
+                            break;
                         case 0xD2:
+                            reader.SkipInt16();
+                            break;
+                        case 0xD5:
                             reader.SkipInt16();
                             break;
                         case 0xD6:
@@ -230,12 +265,16 @@ namespace BMSTool.src
                             reader.SkipInt16();
                             break;
                         case 0xFD: // Time base
-                            SetTimeBase timeBase = new SetTimeBase(reader, FileTypes.BMS);
-                            Events.Insert(0, timeBase);
-                            break;
-                        case 0xFE: // Tempo
+                                   //SetTimeBase timeBase = new SetTimeBase(reader, FileTypes.BMS);
+                                   //Events.Insert(0, timeBase);
                             SetTempo tempo = new SetTempo(reader, FileTypes.BMS);
                             Events.Add(tempo);
+                            break;
+                        case 0xFE: // Tempo
+                                   //SetTempo tempo = new SetTempo(reader, FileTypes.BMS);
+                                   //Events.Add(tempo);
+                            SetTimeBase timeBase = new SetTimeBase(reader, FileTypes.BMS);
+                            Events.Insert(0, timeBase);
                             break;
                         default:
                             throw new FormatException("Unknown opcode " + opCode + "!");

@@ -18,7 +18,6 @@ namespace BMSTool.src
         public BMS(EndianBinaryReader reader)
         {
             Tracks = new List<Track>();
-
             ReadBMS(reader);
         }
 
@@ -30,19 +29,18 @@ namespace BMSTool.src
                 reader.SkipInt16(); // Skip open track opcode and track number
 
                 int trackOffset = (int)reader.ReadBits(24); //& 0x00FFFFFF; // Get 24 bits that hold the offset
-                long nextOpcode = reader.BaseStream.Position; // Save position, since we're jumping to trackOffset
+                long curPos = reader.BaseStream.Position; // Save position, since we're jumping to trackOffset
                 reader.BaseStream.Seek(trackOffset, System.IO.SeekOrigin.Begin); // Jump to beginning of track data
 
                 Track track = new Track(reader, FileTypes.BMS);
                 Tracks.Add(track);
 
-                reader.BaseStream.Position = nextOpcode; // Restore position to continue reading the file
+                reader.BaseStream.Position = curPos; // Restore position to continue reading the file
             }
 
             // MIDI format 1, which this program will output, uses the first track in the file to set global things
             // like tempo and volume. We'll create a track out of the BMS's header here and insert it at the top
             // of the track list.
-
             Track headerTrack = new Track(reader, FileTypes.BMS);
             Tracks.Insert(0, headerTrack);
         }
