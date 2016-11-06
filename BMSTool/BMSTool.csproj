@@ -49,15 +49,17 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="src\Event.cs" />
+    <Compile Include="src\BMS.cs" />
+    <Compile Include="src\Events\Event.cs" />
     <Compile Include="src\FileTypes.cs" />
-    <Compile Include="src\NoteOff.cs" />
-    <Compile Include="src\NoteOn.cs" />
-    <Compile Include="src\SetTempo.cs" />
-    <Compile Include="src\SetTimeBase.cs" />
-    <Compile Include="src\SetVolume.cs" />
+    <Compile Include="src\Events\NoteOff.cs" />
+    <Compile Include="src\Events\NoteOn.cs" />
+    <Compile Include="src\Events\SetTempo.cs" />
+    <Compile Include="src\Events\SetTimeBase.cs" />
+    <Compile Include="src\Events\SetVolume.cs" />
+    <Compile Include="src\MIDI.cs" />
     <Compile Include="src\Track.cs" />
-    <Compile Include="src\Wait.cs" />
+    <Compile Include="src\Events\Wait.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
