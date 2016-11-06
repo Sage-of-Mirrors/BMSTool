@@ -18,21 +18,22 @@ namespace BMSTool.src
         byte TrackNumber;
         public List<Event> Events;
 
-        public Track(EndianBinaryReader reader, FileTypes type)
+        public Track(EndianBinaryReader reader, FileTypes type, int loopCount = 3)
         {
             Events = new List<Event>();
             TrackNumber = TrackNumberSource++;
 
             if (type == FileTypes.BMS)
-                ReadTrackBMS(reader);
+                ReadTrackBMS(reader, loopCount);
             else
                 ReadTrackMIDI(reader);
         }
 
-        private void ReadTrackBMS(EndianBinaryReader reader)
+        private void ReadTrackBMS(EndianBinaryReader reader, int loopCount = 3)
         {
             byte opCode = reader.ReadByte();
             long curPos = 0; // This will be used for 0xC4 and 0xC6 commands to run sub-functions
+            int loop = loopCount;
 
             while (opCode != 0xFF)
             {
@@ -101,7 +102,11 @@ namespace BMSTool.src
                             reader.SkipInt32();
                             break;
                         case 0xA0:
-                            reader.SkipInt16();
+                            byte secondOpcodeA0 = reader.ReadByte();
+                            if (secondOpcodeA0 == 0xAC)
+                                reader.Skip(3);
+                            else
+                                reader.SkipInt16();
                             break;
                         //case 0xA1:
                             //reader.SkipInt16();
@@ -147,7 +152,7 @@ namespace BMSTool.src
                             reader.Skip(3);
                             break;
                         case 0xAD:
-                            reader.Skip(3);
+                            reader.Skip(2);
                             break;
                         //case 0xAF:
                         //
@@ -179,6 +184,8 @@ namespace BMSTool.src
                                 curPos = reader.BaseStream.Position;
                                 reader.BaseStream.Seek(offset, System.IO.SeekOrigin.Begin);
                             }
+                            else
+                                reader.Skip(3);
                             break;
                         case 0xC5:
                             reader.SkipInt32();
@@ -190,7 +197,23 @@ namespace BMSTool.src
                             reader.SkipInt32();
                             break;
                         case 0xC8: // Jump. Used to loop. Unsupported right now
-                            reader.SkipInt32();
+                            byte secondOpCodeC8 = reader.ReadByte();
+                            if (secondOpCodeC8 == 0)
+                            {
+                                if (loop != 0)
+                                {
+                                    int jumpTo = (int)reader.ReadBits(24);
+                                    reader.BaseStream.Seek(jumpTo, System.IO.SeekOrigin.Begin);
+                                    loop--;
+                                }
+                                else
+                                {
+                                    reader.Skip(3);
+                                    //loop = loopCount;
+                                }
+                            }
+                            else
+                                reader.Skip(3);
                             break;
                         case 0xCB:
                             reader.SkipInt16();
@@ -287,7 +310,7 @@ namespace BMSTool.src
             CombineWaitCommands();
         }
 
-        private void ReadTrackMIDI(EndianBinaryReader reader)
+        private void ReadTrackMIDI(EndianBinaryReader reader, int loopCount = 3)
         {
             if (reader.ReadStringUntil('\0') != "MTrk")
                 throw new FormatException(string.Format("Invalid track at offset 0x{0:X8}!", reader.BaseStream.Position));
@@ -461,9 +484,9 @@ namespace BMSTool.src
 
         private void WriteTrackMIDI(EndianBinaryWriter writer)
         {
-            if (TrackNumber == 8)
+            if (Events.Count == 0)
             {
-
+                return;
             }
             writer.Write("MTrk".ToCharArray()); // Track header
             writer.Write((int)0); // Track size placeholder
@@ -490,8 +513,11 @@ namespace BMSTool.src
             writer.Write((byte)0x00);
 
             // If there's no wait command to start off with, delta-time in the track has to be set to 0
-            if (Events[0].GetType() != typeof(Wait))
-                writer.Write((byte)0);
+            if (Events.Count != 0)
+            {
+                if (Events[0].GetType() != typeof(Wait))
+                    writer.Write((byte)0);
+            }
 
             for (int i = 0; i < Events.Count; i++)
             {

@@ -15,22 +15,24 @@ namespace BMSTool
         {
             string inputPath = "";
             string outputPath = "";
+            int loopCount = 0;
 
-            /*
-            if (args.Length != 0)
+            /*if (args.Length != 0)
             {
                 inputPath = args[0];
                 if (args.Length >= 2)
-                   outputPath = args[1];
+                    loopCount = Convert.ToInt32(args[1]);
+                if (args.Length >= 3)
+                   outputPath = args[2];
             }
             else
             {
                 Console.WriteLine("BMS/MIDI Converter written by Sage of Mirrors.");
-                Console.WriteLine("Usage: BMSTool input_file [output_file]");
+                Console.WriteLine("Usage: BMSTool input_file loop_count [output_file]");
                 return;
             }*/
 
-            inputPath = @"D:\SZS Tools\bms\kugutu2.bms";
+            inputPath = @"D:\FDS_BIOS_-_Startup.bms";
             outputPath = string.Format("D:\\{0}", Path.GetFileNameWithoutExtension(inputPath));
 
             if (outputPath == "")
@@ -50,7 +52,11 @@ namespace BMSTool
                 }
                 else if (reader.PeekReadByte() == 0xC1)
                 {
-                    BMS inputBMS = new BMS(reader);
+                    BMS inputBMS;
+                    if (loopCount != 0)
+                        inputBMS = new BMS(reader, loopCount);
+                    else
+                        inputBMS = new BMS(reader);
                     inputBMS.WriteMIDIFile(outputPath);
                 }
                 else
