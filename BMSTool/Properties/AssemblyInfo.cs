@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("BMSTool")]
+[assembly: AssemblyTitle("BMSTool_v2.0")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("BMSTool")]
+[assembly: AssemblyProduct("BMSTool_v2.0")]
 [assembly: AssemblyCopyright("Copyright ©  2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("132a3c67-2e32-42a3-a340-8f49c9d78268")]
+[assembly: Guid("70f368ce-60dd-44e7-a61a-a05e50a43482")]
 
 // Version information for an assembly consists of the following four values:
 //

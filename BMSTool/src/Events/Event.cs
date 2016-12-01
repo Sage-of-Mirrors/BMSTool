@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using GameFormatReader.Common;
 
-namespace BMSTool.src
+namespace BMSTool.src.Events
 {
     public abstract class Event
     {
