@@ -73,7 +73,7 @@ namespace BMSTool.src.BMS
                         case BMS_Command.Open_Track:
                             byte trackNo = reader.ReadByte();
                             int trackOffset = (int)reader.ReadBits(24);
-                            Track newTrack = new Track();
+                            Track newTrack = new Track(trackNo);
                             ReadTrackDataRecursive(reader, newTrack, trackOffset);
                             Tracks.Add(newTrack);
                             break;

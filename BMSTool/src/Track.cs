@@ -12,10 +12,6 @@ namespace BMSTool.src
     class Track
     {
         static byte TrackIDSource = 0;
-
-        // MIDI needs to know the note number in order to turn off the note.
-        // So, to ensure compatibility, we're going to store and remove notes as
-        // they get turned on/off
         
         byte TrackNumber;
         public List<Event> Events;
@@ -23,6 +19,12 @@ namespace BMSTool.src
         public Track()
         {
             TrackNumber = TrackIDSource++;
+            Events = new List<Event>();
+        }
+
+        public Track(byte trackNo)
+        {
+            TrackNumber = trackNo;
             Events = new List<Event>();
         }
 
