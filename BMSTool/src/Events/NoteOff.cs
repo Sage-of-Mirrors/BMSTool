@@ -17,7 +17,7 @@ namespace BMSTool.src.Events
         {
             Note = 0x3C; // Middle C
             Channel = 0; // Channel 0
-            Velocity = 0x40; // Half volume
+            Velocity = 0x0; // No volume
         }
 
         /// <summary>
@@ -50,11 +50,9 @@ namespace BMSTool.src.Events
         /// <param name="writer">Stream to write to</param>
         public override void WriteBMS(EndianBinaryWriter writer)
         {
-            // MIDI stores NoteOff as <0x80 | Channel ID><Note Number><Velocity>
-            // MIDI needs to know the note number to turn off the note, unlike BMS, so Note will be set from outside the class
-            writer.Write((byte)(0x80 | Channel));
-            writer.Write(Note);
-            writer.Write(Velocity);
+            // BMS stores NoteOff as <0x80 | (Channel ID + 1)>
+            byte noteOff = (byte)(0x80 | (Channel + 1));
+            writer.Write(noteOff);
         }
 
         /// <summary>
@@ -63,9 +61,11 @@ namespace BMSTool.src.Events
         /// <param name="writer">Stream to write to</param>
         public override void WriteMIDI(EndianBinaryWriter writer)
         {
-            // BMS stores NoteOff as <0x80 | (Channel ID + 1)>
-            byte noteOff = (byte)(0x80 | (Channel + 1));
-            writer.Write(noteOff);
+            // MIDI stores NoteOff as <0x80 | Channel ID><Note Number><Velocity>
+            // MIDI needs to know the note number to turn off the note, unlike BMS, so Note will be set from outside the class
+            writer.Write((byte)(0x80 | Channel));
+            writer.Write(Note);
+            writer.Write(Velocity);
         }
     }
 }

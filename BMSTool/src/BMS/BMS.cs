@@ -53,6 +53,7 @@ namespace BMSTool.src.BMS
                 {
                     NoteOn newNote = new NoteOn();
                     newNote.ReadBMS(reader);
+                    newNote.Channel = (byte)(track.TrackNumber - 1);
                     ChannelList[newNote.Channel] = newNote.Note;
                     track.Events.Add(newNote);
                 }
@@ -61,6 +62,7 @@ namespace BMSTool.src.BMS
                 {
                     NoteOff killNote = new NoteOff();
                     killNote.ReadBMS(reader);
+                    killNote.Channel = (byte)(track.TrackNumber - 1);
                     killNote.Note = ChannelList[killNote.Channel];
                     ChannelList[killNote.Channel] = 0xFF;
                     track.Events.Add(killNote);
@@ -73,7 +75,7 @@ namespace BMSTool.src.BMS
                         case BMS_Command.Open_Track:
                             byte trackNo = reader.ReadByte();
                             int trackOffset = (int)reader.ReadBits(24);
-                            Track newTrack = new Track(trackNo);
+                            Track newTrack = new Track();
                             ReadTrackDataRecursive(reader, newTrack, trackOffset);
                             Tracks.Add(newTrack);
                             break;
@@ -123,14 +125,18 @@ namespace BMSTool.src.BMS
                             reader.SkipByte();
                             break;
                         case BMS_Command.Set_Time_Base:
-                            reader.SkipInt16();
+                            SetTempo tempo = new SetTempo();
+                            tempo.ReadBMS(reader);
+                            track.Events.Add(tempo);
                             break;
                         case BMS_Command.Set_Tempo:
-                            reader.SkipInt16();
+                            SetTimeBase timeBase = new SetTimeBase();
+                            timeBase.ReadBMS(reader);
+                            track.Events.Add(timeBase);
                             break;
                         default:
                             Console.WriteLine(string.Format("Unknown command {0:x}!", (byte)command));
-                            break;
+                            throw new ArgumentException();
                     }
                 }
 
@@ -149,7 +155,14 @@ namespace BMSTool.src.BMS
 
         public void WriteMidi(EndianBinaryWriter writer)
         {
+            writer.Write("MThd".ToCharArray()); // MIDI magic
+            writer.Write((int)6); // Header size, constant
+            writer.Write((short)1); // This program outputs type 1 MIDIs
+            writer.Write((short)Tracks.Count);
+            writer.Write((short)0xF0); // Time base. Will (hopefully!) get overwritten by a SetTimeBase event in the master track
 
+            foreach (Track track in Tracks)
+                track.WriteMIDI(writer);
         }
     }
 }
