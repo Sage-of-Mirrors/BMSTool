@@ -56,6 +56,7 @@
     <Compile Include="src\Events\NoteOn.cs" />
     <Compile Include="src\Events\SetTempo.cs" />
     <Compile Include="src\Events\SetTimeBase.cs" />
+    <Compile Include="src\Events\SetVolume.cs" />
     <Compile Include="src\Events\Wait.cs" />
     <Compile Include="src\Track.cs" />
   </ItemGroup>

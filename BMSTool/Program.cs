@@ -41,7 +41,7 @@ namespace BMSTool
 
             if (outputPath == "")
             {
-                outputPath = string.Format("{0}{1}", Path.GetDirectoryName(inputPath),
+                outputPath = string.Format("{0}\\{1}", Path.GetDirectoryName(inputPath),
                                        Path.GetFileNameWithoutExtension(inputPath));
             }
             else

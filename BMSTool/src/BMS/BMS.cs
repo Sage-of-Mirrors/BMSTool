@@ -86,16 +86,43 @@ namespace BMSTool.src.BMS
                             track.Events.Add(wait);
                             break;
                         case BMS_Command.Volume_Plus:
-                            reader.Skip(2);
+                            byte type = reader.ReadByte();
+                            if (type == 0)
+                            {
+                                SetVolume vol = new SetVolume();
+                                vol.ReadBMS(reader, track.TrackNumber);
+                                track.Events.Add(vol);
+                            }
+                            else
+                                reader.SkipByte();
                             break;
                         case BMS_Command.Panning_Plus:
                             reader.Skip(3);
                             break;
+                        case BMS_Command.NineE:
+                            reader.SkipInt32();
+                            break;
                         case BMS_Command.NineC:
                             reader.Skip(3);
                             break;
+                        case BMS_Command.AZero:
+                            byte secondOpcodeA0 = reader.ReadByte();
+                            if (secondOpcodeA0 == 0xAC)
+                                reader.Skip(2);
+                            else
+                                reader.SkipByte();
+                            break;
                         case BMS_Command.Set_Instrument:
                             reader.Skip(2);
+                            break;
+                        case BMS_Command.ASeven:
+                            reader.SkipInt16();
+                            break;
+                        case BMS_Command.AC:
+                            reader.Skip(3);
+                            break;
+                        case BMS_Command.AD:
+                            reader.SkipInt16();
                             break;
                         case BMS_Command.Subroutine_Jump:
                             byte unknown = reader.ReadByte();
@@ -115,11 +142,26 @@ namespace BMSTool.src.BMS
                                 loopCopy--;
                             }
                             break;
+                        case BMS_Command.CB:
+                            reader.SkipInt16();
+                            break;
+                        case BMS_Command.CC:
+                            reader.SkipInt16();
+                            break;
+                        case BMS_Command.DTwo:
+                            reader.SkipInt16();
+                            break;
+                        case BMS_Command.DD:
+                            reader.Skip(3);
+                            break;
                         case BMS_Command.Vibrato:
                             reader.Skip(2);
                             break;
                         case BMS_Command.SyncGPU:
                             reader.Skip(2);
+                            break;
+                        case BMS_Command.EF:
+                            reader.Skip(3);
                             break;
                         case BMS_Command.VibratoPitch:
                             reader.SkipByte();
@@ -141,6 +183,9 @@ namespace BMSTool.src.BMS
                 }
 
                 command = (BMS_Command)reader.ReadByte();
+
+                if (command == BMS_Command.SyncGPU && track.TrackNumber == 0)
+                    break;
             }
 
             reader.BaseStream.Seek(returnOffset, System.IO.SeekOrigin.Begin);
