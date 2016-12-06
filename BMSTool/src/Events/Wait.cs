@@ -60,13 +60,11 @@ namespace BMSTool.src.Events
             }
 
             // Get the actual value
-            for (int i = 0; i < inputIndex; i++)
+            for (int i = 0;  i < inputIndex; i++)
             {
                 WaitTime = WaitTime << 7;
                 WaitTime |= (uint)(inputArray[i] & 0x7F);
             }
-
-            
         }
 
         /// <summary>

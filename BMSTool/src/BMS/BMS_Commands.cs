@@ -68,11 +68,14 @@ namespace BMSTool.src.BMS
         Vibrato = 0xE6, // Unknown
         SyncGPU = 0xE7, // Unknown
         EA = 0xEA,
+        EB = 0xEB,
         EF = 0xEF, // Unknown
 
         Wait_Variable_Length = 0xF0, // Seems to be an implementation of MIDI's variable length delta time. Used in TP but not earlier games
 
         FOne = 0xF1, // Unknown
+        FThree = 0xF3,
+        FSix = 0xF6,
 
         VibratoPitch = 0xF4,
 

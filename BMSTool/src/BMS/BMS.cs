@@ -13,6 +13,9 @@ namespace BMSTool.src.BMS
         List<Track> Tracks;
         int LoopCount = 3;
 
+        int[] subRoutineReturnAddresses = new int[8];
+        int layer = 0;
+
         public BMS()
         {
             Tracks = new List<Track>();
@@ -36,7 +39,7 @@ namespace BMSTool.src.BMS
             reader.BaseStream.Seek(offset, System.IO.SeekOrigin.Begin);
 
             int loopCopy = LoopCount;
-            int subroutineReturnOffset = 0; // Stores the return offset for a subroutine of events
+            //int subroutineReturnOffset = 0; // Stores the return offset for a subroutine of events
 
             // MIDI requires the note name in order to properly terminate a note.
             // This byte[] will represent the channels that notes can be in.
@@ -48,8 +51,10 @@ namespace BMSTool.src.BMS
 
             while (command != BMS_Command.Terminate)
             {
+                if ((byte)command == 0)
+                    break;
                 // Note on
-                if ((byte)command <= 0x7F)
+                else if ((byte)command <= 0x7F)
                 {
                     NoteOn newNote = new NoteOn();
                     newNote.ReadBMS(reader);
@@ -133,18 +138,22 @@ namespace BMSTool.src.BMS
                             break;
                         case BMS_Command.CThree:
                             int c3JumpOffset = (int)reader.ReadBits(24);
-                            subroutineReturnOffset = (int)reader.BaseStream.Position;
+                            subRoutineReturnAddresses[layer] = (int)reader.BaseStream.Position;
+                            layer++;
                             reader.BaseStream.Seek(c3JumpOffset, System.IO.SeekOrigin.Begin);
                             break;
                         case BMS_Command.Subroutine_Jump:
                             byte unknown = reader.ReadByte();
                             int jumpOffset = (int)reader.ReadBits(24);
-                            subroutineReturnOffset = (int)reader.BaseStream.Position;
+                            subRoutineReturnAddresses[layer] = (int)reader.BaseStream.Position;
+                            layer++;
                             reader.BaseStream.Seek(jumpOffset, System.IO.SeekOrigin.Begin);
                             break;
                         case BMS_Command.CFive:
                         case BMS_Command.Subroutine_Return:
-                            reader.BaseStream.Seek(subroutineReturnOffset, System.IO.SeekOrigin.Begin);
+                        case BMS_Command.FSix:
+                            layer--;
+                            reader.BaseStream.Seek(subRoutineReturnAddresses[layer], System.IO.SeekOrigin.Begin);
                             break;
                         case BMS_Command.CSeven:
                             reader.Skip(3);
@@ -154,6 +163,7 @@ namespace BMSTool.src.BMS
                                 reader.SkipInt32();
                             else
                             {
+                                //subroutineReturnOffset = (int)(reader.BaseStream.Position + 4);
                                 loop(reader);
                                 loopCopy--;
                             }
@@ -163,6 +173,9 @@ namespace BMSTool.src.BMS
                             break;
                         case BMS_Command.CC:
                             reader.SkipInt16();
+                            break;
+                        case BMS_Command.DZero:
+                            reader.ReadInt16();
                             break;
                         case BMS_Command.DTwo:
                             reader.SkipInt16();
@@ -197,12 +210,21 @@ namespace BMSTool.src.BMS
                         case BMS_Command.EA:
                             reader.Skip(3);
                             break;
+                        case BMS_Command.EB:
+                            reader.SkipByte();
+                            break;
                         case BMS_Command.EF:
                             reader.Skip(3);
                             break;
-                        case BMS_Command.VibratoPitch:
-                            reader.SkipByte();
+                        case BMS_Command.FThree:
+                            reader.Skip(3);
                             break;
+                        case BMS_Command.VibratoPitch:
+                            reader.SkipInt16();
+                            break;
+                        //case BMS_Command.FSix:
+                        //reader.Skip(4);
+                        //break;
                         case BMS_Command.FNine:
                             reader.SkipInt16();
                             break;
