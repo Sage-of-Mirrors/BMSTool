@@ -31,11 +31,13 @@ namespace BMSTool.src.BMS
         AF = 0xAF, // Unknown
         BOne = 0xB1, // Unknown
         BEight = 0xB8, // Unknown
+        BNine = 0xB9,
         CZero = 0xC0, // Unknown
         
         Open_Track = 0xC1,
 
         CTwo = 0xC2, // Unknown
+        CThree = 0xC3,
 
         Subroutine_Jump = 0xC4, // Jumps to a block of event data
 
@@ -65,6 +67,7 @@ namespace BMSTool.src.BMS
         EThree = 0xE3, // Unknown
         Vibrato = 0xE6, // Unknown
         SyncGPU = 0xE7, // Unknown
+        EA = 0xEA,
         EF = 0xEF, // Unknown
 
         Wait_Variable_Length = 0xF0, // Seems to be an implementation of MIDI's variable length delta time. Used in TP but not earlier games

@@ -81,6 +81,7 @@ namespace BMSTool.src.BMS
                             break;
                         case BMS_Command.Wait_Byte:
                         case BMS_Command.Wait_Short:
+                        case BMS_Command.Wait_Variable_Length:
                             Wait wait = new Wait();
                             wait.ReadBMS(reader);
                             track.Events.Add(wait);
@@ -124,14 +125,29 @@ namespace BMSTool.src.BMS
                         case BMS_Command.AD:
                             reader.SkipInt16();
                             break;
+                        case BMS_Command.BEight:
+                            reader.SkipInt16();
+                            break;
+                        case BMS_Command.BNine:
+                            reader.Skip(3);
+                            break;
+                        case BMS_Command.CThree:
+                            int c3JumpOffset = (int)reader.ReadBits(24);
+                            subroutineReturnOffset = (int)reader.BaseStream.Position;
+                            reader.BaseStream.Seek(c3JumpOffset, System.IO.SeekOrigin.Begin);
+                            break;
                         case BMS_Command.Subroutine_Jump:
                             byte unknown = reader.ReadByte();
                             int jumpOffset = (int)reader.ReadBits(24);
                             subroutineReturnOffset = (int)reader.BaseStream.Position;
                             reader.BaseStream.Seek(jumpOffset, System.IO.SeekOrigin.Begin);
                             break;
+                        case BMS_Command.CFive:
                         case BMS_Command.Subroutine_Return:
                             reader.BaseStream.Seek(subroutineReturnOffset, System.IO.SeekOrigin.Begin);
+                            break;
+                        case BMS_Command.CSeven:
+                            reader.Skip(3);
                             break;
                         case BMS_Command.Loop_Jump:
                             if (loopCopy == 0)
@@ -151,8 +167,26 @@ namespace BMSTool.src.BMS
                         case BMS_Command.DTwo:
                             reader.SkipInt16();
                             break;
+                        case BMS_Command.DSix:
+                            reader.SkipByte();
+                            break;
+                        case BMS_Command.DEight:
+                            reader.Skip(3);
+                            break;
                         case BMS_Command.DD:
                             reader.Skip(3);
+                            break;
+                        case BMS_Command.DF:
+                            reader.SkipInt32();
+                            break;
+                        case BMS_Command.EZero:
+                            reader.SkipInt16();
+                            break;
+                        case BMS_Command.ETwo:
+                            reader.SkipByte();
+                            break;
+                        case BMS_Command.EThree:
+                            reader.SkipByte();
                             break;
                         case BMS_Command.Vibrato:
                             reader.Skip(2);
@@ -160,11 +194,17 @@ namespace BMSTool.src.BMS
                         case BMS_Command.SyncGPU:
                             reader.Skip(2);
                             break;
+                        case BMS_Command.EA:
+                            reader.Skip(3);
+                            break;
                         case BMS_Command.EF:
                             reader.Skip(3);
                             break;
                         case BMS_Command.VibratoPitch:
                             reader.SkipByte();
+                            break;
+                        case BMS_Command.FNine:
+                            reader.SkipInt16();
                             break;
                         case BMS_Command.Set_Time_Base:
                             SetTempo tempo = new SetTempo();

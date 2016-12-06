@@ -31,6 +31,42 @@ namespace BMSTool.src.Events
             // This one uses a short to store time to wait
             else if (opCode == 0x88)
                 WaitTime = (uint)reader.ReadUInt16();
+            else if (opCode == 0xF0)
+                ReadVariableLengthBMS(reader);
+        }
+
+        /// <summary>
+        /// Reads a variable-length wait command from a BMS file.
+        /// </summary>
+        /// <param name="reader"></param>
+        private void ReadVariableLengthBMS(EndianBinaryReader reader)
+        {
+            byte[] inputArray = new byte[4];
+            int inputIndex = 1;
+            byte testByte = reader.ReadByte();
+            inputArray[0] = testByte;
+
+            // Read in the data
+            while (testByte >= 0x80)
+            {
+                testByte = reader.ReadByte();
+                if (testByte == 0xFF)
+                {
+                    reader.BaseStream.Position--;
+                    break;
+                }
+                inputArray[inputIndex] = testByte;
+                inputIndex++;
+            }
+
+            // Get the actual value
+            for (int i = 0; i < inputIndex; i++)
+            {
+                WaitTime = WaitTime << 7;
+                WaitTime |= (uint)(inputArray[i] & 0x7F);
+            }
+
+            
         }
 
         /// <summary>
