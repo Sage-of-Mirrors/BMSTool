@@ -19,12 +19,14 @@ namespace BMSTool.src.MIDI
         short runningStatusCommand;
 
         byte[] Channels;
+        byte ChannelIndex;
 
         public MIDI()
         {
             Tracks = new List<Track>();
             runningStatusCommand = 0;
             Channels = Enumerable.Repeat<byte>(0xFF, 16).ToArray();
+            ChannelIndex = 0;
         }
 
         public void ReadMIDI(EndianBinaryReader reader)
@@ -156,7 +158,7 @@ namespace BMSTool.src.MIDI
                         track.Events.Add(tempo);
                         break;
                     case MIDI_Meta_Commands.End_of_Track:
-                        break;
+                        return;
                     case MIDI_Meta_Commands.Copyright_Notice:
                     case MIDI_Meta_Commands.Cue_Point:
                     case MIDI_Meta_Commands.Instrument_Name:
@@ -171,7 +173,10 @@ namespace BMSTool.src.MIDI
                     case MIDI_Meta_Commands.Text_Event:
                     case MIDI_Meta_Commands.Time_Signature:
                     case MIDI_Meta_Commands.Prefix_Port:
-                        reader.Skip(metaLength);
+                        if (reader.BaseStream.Position + metaLength != reader.BaseStream.Length)
+                            reader.Skip(metaLength);
+                        else
+                            reader.BaseStream.Seek(0, System.IO.SeekOrigin.End);
                         break;
                     default:
                         throw new FormatException(string.Format("Unknown meta event {0:x}!", metaType));
@@ -183,6 +188,7 @@ namespace BMSTool.src.MIDI
         {
             NoteOff off = new NoteOff();
             off.ReadMIDI(reader, channel);
+            off.Channel = --ChannelIndex;
             track.Events.Add(off);
         }
 
@@ -194,12 +200,15 @@ namespace BMSTool.src.MIDI
             if (on.Velocity == 0)
             {
                 NoteOff newOff = new NoteOff();
-                newOff.Channel = on.Channel;
+                newOff.Channel = --ChannelIndex;
                 newOff.Note = on.Note;
                 track.Events.Add(newOff);
             }
             else
+            {
+                on.Channel = ChannelIndex++;
                 track.Events.Add(on);
+            }
         }
 
         public void WriteBMS(EndianBinaryWriter writer)
@@ -231,9 +240,14 @@ namespace BMSTool.src.MIDI
             foreach (Event ev in master.Events)
                 ev.WriteBMS(writer);
 
+            long pos = writer.BaseStream.Position;
             Wait wait = new Wait();
             wait.WaitTime = 0xFFFF;
             wait.WriteBMS(writer);
+
+            // Hack for keeping the song going indefinitely
+            writer.Write((byte)0xC8);
+            writer.Write((int)pos);
 
             writer.Write((byte)0xFF);
         }
@@ -262,8 +276,8 @@ namespace BMSTool.src.MIDI
             // Set instrument sample
             writer.Write((byte)0xA4);
             writer.Write((byte)0x21);
-            //writer.Write((byte)(track.TrackNumber + 2));
-            writer.Write((byte)0x00);
+            writer.Write((byte)(track.TrackNumber + 2));
+            //writer.Write((byte)0x00);
 
             // Set volume
             writer.Write((byte)0x98);
