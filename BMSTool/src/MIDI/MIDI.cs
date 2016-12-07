@@ -167,6 +167,7 @@ namespace BMSTool.src.MIDI
                     case MIDI_Meta_Commands.SMTPE_Offset:
                     case MIDI_Meta_Commands.Text_Event:
                     case MIDI_Meta_Commands.Time_Signature:
+                    case MIDI_Meta_Commands.Prefix_Port:
                         reader.Skip(metaLength);
                         break;
                     default:

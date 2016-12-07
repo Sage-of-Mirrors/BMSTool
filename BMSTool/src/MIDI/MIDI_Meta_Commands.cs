@@ -17,6 +17,7 @@ namespace BMSTool.src.MIDI
         Marker = 6,
         Cue_Point = 7,
         MIDI_Channel_Prefix = 0x20,
+        Prefix_Port = 0x21,
         End_of_Track = 0x2F,
         Set_Tempo = 0x51,
         SMTPE_Offset = 0x54,
