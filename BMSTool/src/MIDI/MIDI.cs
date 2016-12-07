@@ -18,10 +18,13 @@ namespace BMSTool.src.MIDI
         // running status occurs
         short runningStatusCommand;
 
+        byte[] Channels;
+
         public MIDI()
         {
             Tracks = new List<Track>();
             runningStatusCommand = 0;
+            Channels = Enumerable.Repeat<byte>(0xFF, 16).ToArray();
         }
 
         public void ReadMIDI(EndianBinaryReader reader)
@@ -187,7 +190,16 @@ namespace BMSTool.src.MIDI
         {
             NoteOn on = new NoteOn();
             on.ReadMIDI(reader, channel);
-            track.Events.Add(on);
+
+            if (on.Velocity == 0)
+            {
+                NoteOff newOff = new NoteOff();
+                newOff.Channel = on.Channel;
+                newOff.Note = on.Note;
+                track.Events.Add(newOff);
+            }
+            else
+                track.Events.Add(on);
         }
 
         public void WriteBMS(EndianBinaryWriter writer)
@@ -206,7 +218,7 @@ namespace BMSTool.src.MIDI
             foreach (Track track in Tracks)
             {
                 writer.Write((byte)0xC1);
-                writer.Write(track.TrackNumber);
+                writer.Write((byte)(track.TrackNumber - 1));
                 writer.Write((byte)0);
                 writer.Write((byte)0);
                 writer.Write((byte)0);
@@ -218,6 +230,10 @@ namespace BMSTool.src.MIDI
 
             foreach (Event ev in master.Events)
                 ev.WriteBMS(writer);
+
+            Wait wait = new Wait();
+            wait.WaitTime = 0xFFFF;
+            wait.WriteBMS(writer);
 
             writer.Write((byte)0xFF);
         }
@@ -246,7 +262,13 @@ namespace BMSTool.src.MIDI
             // Set instrument sample
             writer.Write((byte)0xA4);
             writer.Write((byte)0x21);
+            //writer.Write((byte)(track.TrackNumber + 2));
             writer.Write((byte)0x00);
+
+            // Set volume
+            writer.Write((byte)0x98);
+            writer.Write((byte)0);
+            writer.Write((byte)0x40);
 
             foreach (Event ev in track.Events)
                 ev.WriteBMS(writer);
