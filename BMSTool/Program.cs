@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.IO;
 using GameFormatReader.Common;
 using BMSTool.src.BMS;
+using BMSTool.src.MIDI;
 
 namespace BMSTool
 {
@@ -56,7 +57,14 @@ namespace BMSTool
                 // The first four bytes are the characters "Mthd", which means this is a MIDI
                 if (reader.PeekReadInt32() == 0x4D546864)
                 {
+                    MIDI midiFile = new MIDI();
+                    midiFile.ReadMIDI(reader);
 
+                    using (FileStream outStream = new FileStream(string.Format("{0}.bms", outputPath), FileMode.Create, FileAccess.Write))
+                    {
+                        EndianBinaryWriter writer = new EndianBinaryWriter(outStream, Endian.Big);
+                        midiFile.WriteBMS(writer);
+                    }
                 }
                 // The first byte is 0xC1, which means this is a BMS
                 else if (reader.PeekReadByte() == 0xC1)

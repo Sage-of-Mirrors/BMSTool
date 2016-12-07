@@ -35,6 +35,9 @@ namespace BMSTool.src.BMS
 
         private void ReadTrackDataRecursive(EndianBinaryReader reader, Track track, int offset = 0)
         {
+            if (offset > reader.BaseStream.Length)
+                return;
+
             long returnOffset = reader.BaseStream.Position;
             reader.BaseStream.Seek(offset, System.IO.SeekOrigin.Begin);
 
@@ -130,10 +133,16 @@ namespace BMSTool.src.BMS
                         case BMS_Command.AD:
                             reader.SkipInt16();
                             break;
+                        case BMS_Command.BSeven:
+                            reader.Skip(3);
+                            break;
                         case BMS_Command.BEight:
                             reader.SkipInt16();
                             break;
                         case BMS_Command.BNine:
+                            reader.Skip(3);
+                            break;
+                        case BMS_Command.BD:
                             reader.Skip(3);
                             break;
                         case BMS_Command.CThree:
@@ -174,26 +183,35 @@ namespace BMSTool.src.BMS
                         case BMS_Command.CC:
                             reader.SkipInt16();
                             break;
+                        case BMS_Command.CE:
+                            reader.Skip(3);
+                            break;
                         case BMS_Command.DZero:
                             reader.ReadInt16();
                             break;
                         case BMS_Command.DTwo:
                             reader.SkipInt16();
                             break;
+                        case BMS_Command.DFour:
+                            reader.Skip(3);
+                            break;
                         case BMS_Command.DSix:
-                            reader.SkipByte();
+                            reader.SkipInt16();
                             break;
                         case BMS_Command.DEight:
                             reader.Skip(3);
+                            break;
+                        case BMS_Command.DA:
+                            reader.Skip(3);
+                            break;
+                        case BMS_Command.DC:
+                            reader.SkipInt32();
                             break;
                         case BMS_Command.DD:
                             reader.Skip(3);
                             break;
                         case BMS_Command.DF:
                             reader.SkipInt32();
-                            break;
-                        case BMS_Command.EZero:
-                            reader.SkipInt16();
                             break;
                         case BMS_Command.ETwo:
                             reader.SkipByte();
@@ -213,7 +231,13 @@ namespace BMSTool.src.BMS
                         case BMS_Command.EB:
                             reader.SkipByte();
                             break;
+                        case BMS_Command.EC:
+                            reader.Skip(3);
+                            break;
                         case BMS_Command.EF:
+                            reader.Skip(3);
+                            break;
+                        case BMS_Command.FTwo:
                             reader.Skip(3);
                             break;
                         case BMS_Command.FThree:
@@ -222,9 +246,9 @@ namespace BMSTool.src.BMS
                         case BMS_Command.VibratoPitch:
                             reader.SkipInt16();
                             break;
-                        //case BMS_Command.FSix:
-                        //reader.Skip(4);
-                        //break;
+                        case BMS_Command.FEight:
+                            reader.Skip(3);
+                            break;
                         case BMS_Command.FNine:
                             reader.SkipInt16();
                             break;
@@ -234,6 +258,7 @@ namespace BMSTool.src.BMS
                             track.Events.Add(tempo);
                             break;
                         case BMS_Command.Set_Tempo:
+                        case BMS_Command.EZero:
                             SetTimeBase timeBase = new SetTimeBase();
                             timeBase.ReadBMS(reader);
                             track.Events.Add(timeBase);
@@ -246,7 +271,10 @@ namespace BMSTool.src.BMS
 
                 command = (BMS_Command)reader.ReadByte();
 
-                if (command == BMS_Command.SyncGPU && track.TrackNumber == 0)
+                if ((byte)command == 0)
+                    break;
+
+                else if (command == BMS_Command.SyncGPU && track.TrackNumber == 0)
                     break;
             }
 

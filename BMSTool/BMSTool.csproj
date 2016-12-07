@@ -58,6 +58,9 @@
     <Compile Include="src\Events\SetTimeBase.cs" />
     <Compile Include="src\Events\SetVolume.cs" />
     <Compile Include="src\Events\Wait.cs" />
+    <Compile Include="src\MIDI\MIDI.cs" />
+    <Compile Include="src\MIDI\MIDI_Meta_Commands.cs" />
+    <Compile Include="src\MIDI\MIDI_System_Commands.cs" />
     <Compile Include="src\Track.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -68,9 +71,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="src\MIDI\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

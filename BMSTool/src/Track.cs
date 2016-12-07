@@ -50,6 +50,9 @@ namespace BMSTool.src
 
         public void WriteMIDI(EndianBinaryWriter writer)
         {
+            if (Events.Count == 0)
+                return;
+
             int trackSize;
             long trackSizePos;
 

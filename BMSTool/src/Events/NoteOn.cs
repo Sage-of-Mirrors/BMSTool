@@ -38,10 +38,10 @@ namespace BMSTool.src.Events
         /// Reads a NoteOn event from the specified MIDI file.
         /// </summary>
         /// <param name="reader">MIDI stream to read from</param>
-        public void ReadMIDI(EndianBinaryReader reader)
+        public void ReadMIDI(EndianBinaryReader reader, byte channel)
         {
             // MIDI stores NoteOn as <0x90 | Channel ID><Note Number><Velocity>
-            Channel = (byte)(reader.ReadByte() & 0x0F);
+            Channel = channel;
             Note = (byte)(reader.ReadByte() & 0x7F);
             Velocity = (byte)(reader.ReadByte() & 0x7F);
         }

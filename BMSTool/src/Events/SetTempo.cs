@@ -9,7 +9,7 @@ namespace BMSTool.src.Events
 {
     class SetTempo : Event
     {
-        short Tempo;
+        ushort Tempo;
 
         public SetTempo()
         {
@@ -18,12 +18,13 @@ namespace BMSTool.src.Events
 
         public void ReadBMS(EndianBinaryReader reader)
         {
-            Tempo = reader.ReadInt16();
+            Tempo = reader.ReadUInt16();
         }
 
         public void ReadMIDI(EndianBinaryReader reader)
         {
-
+            uint tempoVal = reader.ReadBits(24);
+            Tempo = (ushort)(60000000 / tempoVal); // Tempo is stored in microseconds, so we have to convert that to Beats per Minute
         }
 
         public override void WriteBMS(EndianBinaryWriter writer)

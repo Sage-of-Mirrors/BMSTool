@@ -30,8 +30,10 @@ namespace BMSTool.src.BMS
         AD = 0xAD, // Unknown
         AF = 0xAF, // Unknown
         BOne = 0xB1, // Unknown
+        BSeven = 0xB7,
         BEight = 0xB8, // Unknown
         BNine = 0xB9,
+        BD = 0xBD,
         CZero = 0xC0, // Unknown
         
         Open_Track = 0xC1,
@@ -51,15 +53,18 @@ namespace BMSTool.src.BMS
 
         CB = 0xCB, // Unknown
         CC = 0xCC, // Unknown
+        CE = 0xCE,
         CF = 0xCF, // Unknown
         DZero = 0xD0, // Unknown
         DOne = 0xD1, // Unknown
         DTwo = 0xD2, // Unknown
+        DFour = 0xD4,
         DFive = 0xD5, // Unknown
         DSix = 0xD6, // Unknown
         DEight = 0xD8, // Unknown
         DA = 0xDA, // Unknown
         DB = 0xDB, // Unknown
+        DC = 0xDC,
         DD = 0xDD, // Unknown
         DF = 0xDF, // Unknown
         EZero = 0xE0, // Unknown
@@ -69,16 +74,19 @@ namespace BMSTool.src.BMS
         SyncGPU = 0xE7, // Unknown
         EA = 0xEA,
         EB = 0xEB,
+        EC = 0xEC,
         EF = 0xEF, // Unknown
 
         Wait_Variable_Length = 0xF0, // Seems to be an implementation of MIDI's variable length delta time. Used in TP but not earlier games
 
         FOne = 0xF1, // Unknown
+        FTwo = 0xF2,
         FThree = 0xF3,
         FSix = 0xF6,
 
         VibratoPitch = 0xF4,
 
+        FEight = 0xF8,
         FNine = 0xF9, // Unknown
 
         Set_Time_Base = 0xFD,
