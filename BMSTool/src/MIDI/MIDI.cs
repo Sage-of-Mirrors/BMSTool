@@ -234,8 +234,7 @@ namespace BMSTool.src.MIDI
             }
 
             writer.Write((byte)0xFE);
-            writer.Write((byte)0);
-            writer.Write((byte)timeBase);
+            writer.Write(timeBase);
 
             foreach (Event ev in master.Events)
                 ev.WriteBMS(writer);
