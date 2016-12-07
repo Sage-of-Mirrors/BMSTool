@@ -29,7 +29,9 @@ namespace BMSTool.src.Events
 
         public override void WriteBMS(EndianBinaryWriter writer)
         {
-            throw new NotImplementedException();
+            writer.Write((byte)0xFD);
+            writer.Write((byte)0);
+            writer.Write((byte)Tempo);
         }
 
         public override void WriteMIDI(EndianBinaryWriter writer)

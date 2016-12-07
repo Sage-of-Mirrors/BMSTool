@@ -88,12 +88,12 @@ namespace BMSTool.src.MIDI
             // Note off
             if (command >= 0x80 && command <= 0x8F)
             {
-                GetNoteOff(reader, track, (byte)(command | 0x0F));
+                GetNoteOff(reader, track, (byte)(command & 0x0F));
             }
             // Note on
             else if (command >= 0x90 && command <= 0x9F)
             {
-                GetNoteOn(reader, track, (byte)(command | 0x0F));
+                GetNoteOn(reader, track, (byte)(command & 0x0F));
             }
             // Polyphonic key pressure
             else if (command >= 0xA0 && command <= 0xAF)
@@ -192,7 +192,66 @@ namespace BMSTool.src.MIDI
 
         public void WriteBMS(EndianBinaryWriter writer)
         {
+            Track masterTrack = Tracks[0];
+            Tracks.RemoveAt(0);
 
+            WriteMasterTrack(writer, masterTrack);
+
+            foreach (Track track in Tracks)
+                WriteTrack(writer, track);
+        }
+
+        private void WriteMasterTrack(EndianBinaryWriter writer, Track master)
+        {
+            foreach (Track track in Tracks)
+            {
+                writer.Write((byte)0xC1);
+                writer.Write(track.TrackNumber);
+                writer.Write((byte)0);
+                writer.Write((byte)0);
+                writer.Write((byte)0);
+            }
+
+            writer.Write((byte)0xFE);
+            writer.Write((byte)0);
+            writer.Write((byte)timeBase);
+
+            foreach (Event ev in master.Events)
+                ev.WriteBMS(writer);
+
+            writer.Write((byte)0xFF);
+        }
+
+        private void WriteTrack(EndianBinaryWriter writer, Track track)
+        {
+            long curPos = writer.BaseStream.Position;
+            writer.Seek((track.TrackNumber - 1) * 5 + 2, System.IO.SeekOrigin.Begin);
+
+            writer.Write((byte)((curPos & 0xFF0000) >> 16));
+            writer.Write((byte)((curPos & 0x00FF00) >> 8));
+            writer.Write((byte)((curPos & 0x0000FF) >> 0));
+
+            writer.BaseStream.Seek(curPos, System.IO.SeekOrigin.Begin);
+
+            // SyncGPU
+            writer.Write((byte)0xE7);
+            writer.Write((byte)0x00);
+            writer.Write((byte)0x00);
+
+            // Set instrument bank
+            writer.Write((byte)0xA4);
+            writer.Write((byte)0x20);
+            writer.Write((byte)0x00);
+
+            // Set instrument sample
+            writer.Write((byte)0xA4);
+            writer.Write((byte)0x21);
+            writer.Write((byte)0x00);
+
+            foreach (Event ev in track.Events)
+                ev.WriteBMS(writer);
+
+            writer.Write((byte)0xFF);
         }
 
         private int GetVariableLength(EndianBinaryReader reader)
