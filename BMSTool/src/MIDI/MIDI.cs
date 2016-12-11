@@ -50,6 +50,8 @@ namespace BMSTool.src.MIDI
 
         private void ReadMIDITrack(EndianBinaryReader reader, Track track)
         {
+            Channels = Enumerable.Repeat<byte>(0xFF, 16).ToArray();
+
             string trackTag = new string(reader.ReadChars(4));
             if (trackTag != "MTrk")
                 throw new FormatException(string.Format("Track tag was incorrect at {0:x}!", reader.BaseStream.Position - 4));
@@ -188,7 +190,13 @@ namespace BMSTool.src.MIDI
         {
             NoteOff off = new NoteOff();
             off.ReadMIDI(reader, channel);
-            off.Channel = --ChannelIndex;
+
+            int notesChannel = 0;
+            while (Channels[notesChannel] != off.Note)
+                notesChannel++;
+            Channels[notesChannel] = 0xFF;
+            off.Channel = (byte)notesChannel;
+
             track.Events.Add(off);
         }
 
@@ -200,13 +208,30 @@ namespace BMSTool.src.MIDI
             if (on.Velocity == 0)
             {
                 NoteOff newOff = new NoteOff();
-                newOff.Channel = --ChannelIndex;
                 newOff.Note = on.Note;
+
+                int notesChannel = 0;
+                while (Channels[notesChannel] != newOff.Note)
+                    notesChannel++;
+                Channels[notesChannel] = 0xFF;
+                newOff.Channel = (byte)notesChannel;
+
                 track.Events.Add(newOff);
             }
             else
             {
-                on.Channel = ChannelIndex++;
+                int freeChannel = 0;
+                for (int i = 0; i < 16; i++)
+                {
+                    if (Channels[i] == 0xFF)
+                    {
+                        freeChannel = i;
+                        break;
+                    }
+                }
+
+                Channels[freeChannel] = on.Note;
+                on.Channel = (byte)freeChannel;
                 track.Events.Add(on);
             }
         }

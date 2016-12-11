@@ -72,6 +72,11 @@ namespace BMSTool.src.BMS
                     killNote.ReadBMS(reader);
                     killNote.Channel = (byte)(track.TrackNumber - 1);
                     killNote.Note = ChannelList[killNote.Channel];
+                    
+                    if (killNote.Note == (byte)0xFF)
+                    {
+
+                    }
                     ChannelList[killNote.Channel] = 0xFF;
                     track.Events.Add(killNote);
                 }

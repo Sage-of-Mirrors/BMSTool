@@ -46,7 +46,7 @@ namespace BMSTool
                                        Path.GetFileNameWithoutExtension(inputPath));
             }
             else
-                outputPath = string.Format("{0}{1}", Path.GetDirectoryName(outputPath), Path.GetFileNameWithoutExtension(outputPath));
+                outputPath = string.Format("{0}\\{1}", Path.GetDirectoryName(outputPath), Path.GetFileNameWithoutExtension(outputPath));
 
             using (FileStream stream = new FileStream(inputPath, FileMode.Open, FileAccess.Read))
             {
